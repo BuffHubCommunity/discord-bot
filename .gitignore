@@ -1,0 +1,5 @@
+/.idea/
+/node_modules/
+/discord-bot.iml
+/package-lock.json
+.env
