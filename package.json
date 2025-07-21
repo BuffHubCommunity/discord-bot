@@ -4,13 +4,16 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "build": "tsc -p tsconfig.json && node --env-file=.env ./source/Main.js"
+    "build": "tsc -p tsconfig.json",
+    "start": "npm run build && node --env-file=.env ./source/Main.js",
+    "register-commands": "npm run build && node --env-file=.env ./source/RegisterCommands.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
-    "discord.js": "^14.21.0"
+    "discord.js": "^14.21.0",
+    "lowdb": "^7.0.1"
   }
 }
