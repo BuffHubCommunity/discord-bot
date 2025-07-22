@@ -23,8 +23,18 @@ import {REST, Routes, SlashCommandBuilder} from "discord.js";
             ),
 
         new SlashCommandBuilder()
-            .setName('шаблон-перевірки')
+            .setName('шаблон')
             .setDescription('Надсилає шаблон тексту для перевірки.')
+            .addStringOption(option => option
+                .setName('тип')
+                .setDescription('Оберіть тип шаблону')
+                .setRequired(true)
+                .addChoices(
+                    {name: 'питання-перевірки', value: 'questions'},
+                    {name: 'як-відкрити-профіль', value: 'how-to-public-profile'},
+                    {name: 'як-видалити-гру', value: 'how-to-delete-game'}
+                )
+            )
     ].map(command => command.toJSON())
 
     const rest = new REST({version: '10'})
@@ -39,7 +49,7 @@ import {REST, Routes, SlashCommandBuilder} from "discord.js";
                     process.env.CLIENT_ID as string,
                     process.env.GUILD_ID as string
                 ),
-                { body: commands },
+                {body: commands},
             )
 
             console.log('Guild slash commands registered.')

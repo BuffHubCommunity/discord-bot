@@ -7,7 +7,7 @@ import {
 import {
     GreetingCommand
 } from './commands/impl/GreetingCommand'
-import {VerificationCommand} from "./commands/impl/VerificationCommand";
+import {TemplateCommand} from "./commands/impl/TemplateCommand";
 
 (async () => {
     const client = new Client({
@@ -22,7 +22,7 @@ import {VerificationCommand} from "./commands/impl/VerificationCommand";
         partials: [Partials.Channel]
     })
 
-    const commands = [new GreetingCommand(), new VerificationCommand()]
+    const commands = [new GreetingCommand(), new TemplateCommand()]
     commands.forEach((command) => command.init(client))
 
     client.on('ready', () => {
