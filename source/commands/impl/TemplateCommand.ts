@@ -38,7 +38,7 @@ export class TemplateCommand extends Command {
                     .setColor("#4467ea")
 
                 const embed_3 = new EmbedBuilder()
-                    .setImage("https://raw.githubusercontent.com/BuffHubCommunity/discord-bot/master/assets/public-profile-step-2.png")
+                    .setImage("https://raw.githubusercontent.com/BuffHubCommunity/discord-bot/master/assets/public-profile-step-3.png")
                     .setColor("#4467ea")
 
                 await interaction.reply({
