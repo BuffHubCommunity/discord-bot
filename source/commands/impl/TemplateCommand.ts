@@ -53,6 +53,26 @@ export class TemplateCommand extends Command {
             }
 
             case 'how-to-delete-game': {
+                const embed_1 = new EmbedBuilder()
+                    .setImage("https://raw.githubusercontent.com/BuffHubCommunity/discord-bot/master/assets/remove-game-step-1.png")
+                    .setColor("#4467ea")
+
+                const embed_2 = new EmbedBuilder()
+                    .setImage("https://raw.githubusercontent.com/BuffHubCommunity/discord-bot/master/assets/remove-game-step-2.png")
+                    .setColor("#4467ea")
+
+                const embed_3 = new EmbedBuilder()
+                    .setImage("https://raw.githubusercontent.com/BuffHubCommunity/discord-bot/master/assets/remove-game-step-3.png")
+                    .setColor("#4467ea")
+
+                await interaction.reply({
+                    embeds: [
+                        embed_1,
+                        embed_2,
+                        embed_3
+                    ]
+                })
+
                 break
             }
         }
