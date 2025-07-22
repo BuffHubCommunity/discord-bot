@@ -25,7 +25,7 @@ import {REST, Routes, SlashCommandBuilder} from "discord.js";
         new SlashCommandBuilder()
             .setName('шаблон')
             .setDescription('Надсилає шаблон тексту для перевірки.')
-            .addStringOption(option => option
+            .addStringOption((option) => option
                 .setName('тип')
                 .setDescription('Оберіть тип шаблону')
                 .setRequired(true)
@@ -34,8 +34,17 @@ import {REST, Routes, SlashCommandBuilder} from "discord.js";
                     {name: 'як-відкрити-профіль', value: 'how-to-public-profile'},
                     {name: 'як-видалити-гру', value: 'how-to-delete-game'}
                 )
+            ),
+
+        new SlashCommandBuilder()
+            .setName('налаштувати-вартового')
+            .setDescription('Налаштовує роль вартового.')
+            .addRoleOption((option) => option
+                .setName('роль')
+                .setDescription('Роль учасника, який буде перевіряти заявки інших.')
+                .setRequired(true)
             )
-    ].map(command => command.toJSON())
+    ].map((command) => command.toJSON())
 
     const rest = new REST({version: '10'})
         .setToken(process.env.BOT_TOKEN as string)

@@ -1,10 +1,12 @@
 import {GreetingSchema} from "./commands/impl/GreetingCommand"
 import {JSONFilePreset} from "lowdb/node";
 import {Low} from "lowdb";
+import {GuardRoleSchema} from "./commands/impl/GuardRoleCommand";
 
 export type ConfigSchema = {
     commands: {
-        'налаштувати-привітання': GreetingSchema
+        'налаштувати-привітання': GreetingSchema,
+        'налаштувати-вартового': GuardRoleSchema
     }
 }
 

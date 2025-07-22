@@ -1,4 +1,4 @@
-import {ChatInputCommandInteraction, Client, GuildMember, PermissionsBitField} from 'discord.js'
+import {CacheType, ChatInputCommandInteraction, Client, GuildMember, Interaction, PermissionsBitField} from 'discord.js'
 
 export abstract class Command {
     abstract name: string;
@@ -22,12 +22,7 @@ export abstract class Command {
                 if (interaction.member.permissions.has(PermissionsBitField.Flags.Administrator)) {
                     return true
                 } else {
-                    await interaction.reply({
-                        content: 'nuh uh <:scout:1337132860410167366>',
-                        ephemeral: true
-                    })
-
-                    return false
+                    return await this.reject(interaction)
                 }
             } else {
                 return true
@@ -35,5 +30,14 @@ export abstract class Command {
         } else {
             return false
         }
+    }
+
+    async reject(interaction: ChatInputCommandInteraction) {
+        await interaction.reply({
+            content: 'nuh uh <:scout:1337132860410167366>',
+            ephemeral: true
+        })
+
+        return false
     }
 }
