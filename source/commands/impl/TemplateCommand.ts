@@ -29,6 +29,16 @@ export class TemplateCommand extends Command {
             }
 
             case 'how-to-public-profile': {
+                const embed_1 = new EmbedBuilder()
+                    .setImage("https://raw.githubusercontent.com/BuffHubCommunity/discord-bot/master/assets/public-profile-step-1.png")
+                    .setColor("#4467ea")
+
+                await interaction.reply({
+                    embeds: [
+                        embed_1
+                    ]
+                })
+
                 break
             }
 
