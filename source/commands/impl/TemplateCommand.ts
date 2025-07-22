@@ -27,6 +27,14 @@ export class TemplateCommand extends Command {
 
                 break
             }
+
+            case 'how-to-public-profile': {
+                break
+            }
+
+            case 'how-to-delete-game': {
+                break
+            }
         }
     }
 }
