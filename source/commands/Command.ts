@@ -1,43 +1,44 @@
-import {CacheType, ChatInputCommandInteraction, Client, GuildMember, Interaction, PermissionsBitField} from 'discord.js'
+import {ChatInputCommandInteraction, Client, GuildMember, PermissionResolvable, PermissionsBitField} from 'discord.js'
 
 export abstract class Command {
-    abstract name: string;
-    abstract admin_only: boolean;
+    readonly abstract name: string
 
-    abstract init(
-        client: Client
-    ): Promise<void>
+    abstract init(client: Client): void
 
-    abstract execute(
-        interaction: ChatInputCommandInteraction
-    ): Promise<void>
-
-    async canDispatch(interaction: ChatInputCommandInteraction): Promise<boolean> {
-        if (interaction.commandName === this.name) {
-            if (this.admin_only) {
-                if (!(interaction.member instanceof GuildMember)) {
-                    return false
-                }
-
-                if (interaction.member.permissions.has(PermissionsBitField.Flags.Administrator)) {
-                    return true
-                } else {
-                    return await this.reject(interaction)
-                }
-            } else {
-                return true
-            }
-        } else {
-            return false
-        }
+    isNeededCommand(interaction: ChatInputCommandInteraction): boolean {
+        return interaction.commandName === this.name
     }
 
-    async reject(interaction: ChatInputCommandInteraction) {
-        await interaction.reply({
-            content: 'nuh uh <:scout:1337132860410167366>',
-            ephemeral: true
-        })
+    abstract canAccept(interaction: ChatInputCommandInteraction): Promise<boolean>
 
-        return false
+    abstract accept(interaction: ChatInputCommandInteraction): Promise<void>
+    abstract reject(interaction: ChatInputCommandInteraction): Promise<void>
+
+    hasPermission(
+        member: (GuildMember | any),
+        permission: PermissionResolvable
+    ): boolean {
+        if (!(member instanceof GuildMember)) {
+            console.log('Користувач не є GuildMember.')
+            return false
+        }
+
+        return member.permissions.has(permission)
+    }
+
+    hasRole(
+        member: (GuildMember | any),
+        role_id: string
+    ): boolean {
+        if (!(member instanceof GuildMember)) {
+            console.log('Користувач не є GuildMember.')
+            return false
+        }
+
+        return member.roles.cache.has(role_id)
+    }
+
+    isAdministrator(member: (GuildMember | any)) {
+        return this.hasPermission(member, PermissionsBitField.Flags.Administrator)
     }
 }

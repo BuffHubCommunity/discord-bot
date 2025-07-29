@@ -1,21 +1,31 @@
-import {GreetingSchema} from "./commands/impl/GreetingCommand"
+import {GreetVerifiedUserCommand, GreetVerifiedUserSchema} from "./commands/impl/GreetVerifiedUserCommand"
 import {JSONFilePreset} from "lowdb/node";
 import {Low} from "lowdb";
-import {GuardRoleSchema} from "./commands/impl/GuardRoleCommand";
+import {VerifierSchema} from "./commands/impl/VerifierCommand";
+import {EconomySchema} from "./commands/impl/EconomyCommand";
 
 export type ConfigSchema = {
-    commands: {
-        'налаштувати-привітання': GreetingSchema,
-        'налаштувати-вартового': GuardRoleSchema
-    }
+    'команди': {
+        'налаштувати-вартового': VerifierSchema,
+        'налаштувати-привітання': GreetVerifiedUserSchema,
+    },
+    'економіка': EconomySchema
+}
+
+async function getLowConfig() {
+    return (await JSONFilePreset('config.json', {
+        'команди': {},
+        'економіка': {
+            'користувачі': {}
+        }
+    }) as unknown as Low<ConfigSchema>)
 }
 
 async function getConfig() {
-    return await JSONFilePreset('config.json', {
-        commands: {}
-    }) as unknown as Low<ConfigSchema>
+    return (await getLowConfig()).data as ConfigSchema
 }
 
 export const Config = {
+    getLowConfig: getLowConfig,
     getConfig: getConfig
 }

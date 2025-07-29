@@ -43,7 +43,19 @@ import {REST, Routes, SlashCommandBuilder} from "discord.js";
                 .setName('роль')
                 .setDescription('Роль учасника, який буде перевіряти заявки інших.')
                 .setRequired(true)
-            )
+            ),
+
+        new SlashCommandBuilder()
+            .setName('економіка')
+            .setDescription('Деталі про економіку спільноти.'),
+
+        new SlashCommandBuilder()
+            .setName('баланс')
+            .setDescription('Перевірити поточну кількість Бафів.'),
+
+        new SlashCommandBuilder()
+            .setName('таблиця-лідерів')
+            .setDescription('Переглянути ТОП-10 найактивніших учасників спільноти.')
     ].map((command) => command.toJSON())
 
     const rest = new REST({version: '10'})

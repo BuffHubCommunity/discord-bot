@@ -5,10 +5,13 @@ import {
     ChatInputCommandInteraction, Interaction, CacheType
 } from 'discord.js'
 import {
-    GreetingCommand
-} from './commands/impl/GreetingCommand'
+    GreetVerifiedUserCommand
+} from './commands/impl/GreetVerifiedUserCommand'
 import {TemplateCommand} from "./commands/impl/TemplateCommand";
-import {GuardRoleCommand} from "./commands/impl/GuardRoleCommand";
+import {VerifierCommand} from "./commands/impl/VerifierCommand";
+import {EconomyCommand} from "./commands/impl/EconomyCommand";
+import {BalanceCommand} from "./commands/impl/BalanceCommand";
+import {LeaderboardsCommand} from "./commands/impl/LeaderboardsCommand";
 
 (async () => {
     const client = new Client({
@@ -23,27 +26,35 @@ import {GuardRoleCommand} from "./commands/impl/GuardRoleCommand";
         partials: [Partials.Channel]
     })
 
-    const commands = [new GreetingCommand(), new TemplateCommand(), new GuardRoleCommand()]
+    const commands = [
+        new GreetVerifiedUserCommand(),
+        new VerifierCommand(),
+        new TemplateCommand(),
+        new EconomyCommand(),
+        new BalanceCommand(),
+        new LeaderboardsCommand()
+    ]
     commands.forEach((command) => command.init(client))
-
-    client.on('ready', () => {
-        console.log('Бот запущений.')
-    })
 
     client.on('interactionCreate', async (interaction: Interaction<CacheType>) => {
         if (!(interaction instanceof ChatInputCommandInteraction)) return
 
         for (let command of commands) {
-            if (await command.canDispatch(interaction)) {
-                await command.execute(interaction)
-                break
+            if (command.isNeededCommand(interaction)) {
+                const canAccept = await command.canAccept(interaction)
+
+                if (canAccept) {
+                    await command.accept(interaction)
+                } else {
+                    await command.reject(interaction)
+                }
             }
         }
     })
 
+    client.on('ready', () => {
+        console.log('Бот запущений.')
+    })
+
     await client.login(process.env.BOT_TOKEN)
 })()
-
-// адмін                /доступ-до-бота *роль*
-// адмін/окрема роль    /привітання *роль* *канал* *текст*
-// усі                  /сервер-тф
