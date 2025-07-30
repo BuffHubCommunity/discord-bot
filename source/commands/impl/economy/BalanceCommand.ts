@@ -1,6 +1,6 @@
-import {Command} from '../Command'
+import {Command} from '../../Command'
 import {ChatInputCommandInteraction, Client, EmbedBuilder, GuildMember} from 'discord.js'
-import {Config} from "../../Config";
+import {Config} from "../../../Config";
 export class BalanceCommand extends Command {
     readonly name = 'баланс'
 
@@ -22,7 +22,7 @@ export class BalanceCommand extends Command {
 
         await interaction.reply({
             embeds: [embed],
-            ephemeral: true
+            ephemeral: false
         })
     }
 

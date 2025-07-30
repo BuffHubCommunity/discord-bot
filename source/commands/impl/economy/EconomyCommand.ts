@@ -1,6 +1,6 @@
-import {Command} from '../Command'
+import {Command} from '../../Command'
 import {ChatInputCommandInteraction, Client, EmbedBuilder} from 'discord.js'
-import {Config} from "../../Config";
+import {Config} from "../../../Config";
 
 export type EconomySchema = {
     'користувачі': { [key: string]: number }

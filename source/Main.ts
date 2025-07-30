@@ -9,9 +9,9 @@ import {
 } from './commands/impl/GreetVerifiedUserCommand'
 import {TemplateCommand} from "./commands/impl/TemplateCommand";
 import {VerifierCommand} from "./commands/impl/VerifierCommand";
-import {EconomyCommand} from "./commands/impl/EconomyCommand";
-import {BalanceCommand} from "./commands/impl/BalanceCommand";
-import {LeaderboardsCommand} from "./commands/impl/LeaderboardsCommand";
+import {EconomyCommand} from "./commands/impl/economy/EconomyCommand";
+import {BalanceCommand} from "./commands/impl/economy/BalanceCommand";
+import {LeaderboardsCommand} from "./commands/impl/economy/LeaderboardsCommand";
 
 (async () => {
     const client = new Client({
@@ -37,6 +37,7 @@ import {LeaderboardsCommand} from "./commands/impl/LeaderboardsCommand";
     commands.forEach((command) => command.init(client))
 
     client.on('interactionCreate', async (interaction: Interaction<CacheType>) => {
+        if (!interaction.guild) return
         if (!(interaction instanceof ChatInputCommandInteraction)) return
 
         for (let command of commands) {
