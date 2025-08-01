@@ -11,6 +11,8 @@ export class BalanceCommand extends Command {
     }
 
     async accept(interaction: ChatInputCommandInteraction): Promise<void> {
+        await interaction.deferReply()
+
         const config = await Config.getConfig()
         const balance =  config['економіка']['користувачі'][(interaction.member as GuildMember).user.id] || 0
 
@@ -20,9 +22,8 @@ export class BalanceCommand extends Command {
             .setColor('#4b73f5')
             .setTimestamp()
 
-        await interaction.reply({
-            embeds: [embed],
-            ephemeral: false
+        await interaction.editReply({
+            embeds: [embed]
         })
     }
 

@@ -1,7 +1,7 @@
 import {GreetVerifiedUserCommand, GreetVerifiedUserSchema} from "./commands/impl/GreetVerifiedUserCommand"
 import {JSONFilePreset} from "lowdb/node";
 import {Low} from "lowdb";
-import {VerifierSchema} from "./commands/impl/VerifierCommand";
+import {VerifierSchema} from "./commands/impl/SetupVerifierCommand";
 import {EconomySchema} from "./commands/impl/economy/EconomyCommand";
 
 export type ConfigSchema = {

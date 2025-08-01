@@ -2,16 +2,18 @@ import {
     Client,
     GatewayIntentBits,
     Partials,
-    ChatInputCommandInteraction, Interaction, CacheType
+    ChatInputCommandInteraction, Interaction, CacheType, GuildMember, EmbedBuilder
 } from 'discord.js'
 import {
     GreetVerifiedUserCommand
 } from './commands/impl/GreetVerifiedUserCommand'
 import {TemplateCommand} from "./commands/impl/TemplateCommand";
-import {VerifierCommand} from "./commands/impl/VerifierCommand";
+import {SetupVerifierCommand} from "./commands/impl/SetupVerifierCommand";
 import {EconomyCommand} from "./commands/impl/economy/EconomyCommand";
 import {BalanceCommand} from "./commands/impl/economy/BalanceCommand";
 import {LeaderboardsCommand} from "./commands/impl/economy/LeaderboardsCommand";
+import {VerifySteamProfileCommand} from "./commands/impl/VerifySteamProfileCommand";
+import {Config} from "./Config";
 
 (async () => {
     const client = new Client({
@@ -28,11 +30,12 @@ import {LeaderboardsCommand} from "./commands/impl/economy/LeaderboardsCommand";
 
     const commands = [
         new GreetVerifiedUserCommand(),
-        new VerifierCommand(),
+        new SetupVerifierCommand(),
         new TemplateCommand(),
         new EconomyCommand(),
         new BalanceCommand(),
-        new LeaderboardsCommand()
+        new LeaderboardsCommand(),
+        new VerifySteamProfileCommand()
     ]
     commands.forEach((command) => command.init(client))
 
@@ -45,9 +48,9 @@ import {LeaderboardsCommand} from "./commands/impl/economy/LeaderboardsCommand";
                 const canAccept = await command.canAccept(interaction)
 
                 if (canAccept) {
-                    await command.accept(interaction)
+                    return await command.accept(interaction)
                 } else {
-                    await command.reject(interaction)
+                    return await command.reject(interaction)
                 }
             }
         }

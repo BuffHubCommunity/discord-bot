@@ -8,7 +8,7 @@ export type VerifierSchema = {
     }
 }
 
-export class VerifierCommand extends Command {
+export class SetupVerifierCommand extends Command {
     readonly name = 'налаштувати-вартового'
 
     async init(client: Client): Promise<void> {}

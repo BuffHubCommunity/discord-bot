@@ -13,6 +13,8 @@ export class LeaderboardsCommand extends Command {
     }
 
     async accept(interaction: ChatInputCommandInteraction): Promise<void> {
+        await interaction.deferReply()
+
         const guild = (interaction.guild as Guild) // Ніколи не undefined, перевіряємо у Main.ts.
 
         const config = await Config.getConfig()
@@ -33,8 +35,6 @@ export class LeaderboardsCommand extends Command {
             .map((entry) => entry)
             .sort((a, b) => b[1] - a[1])
             .slice(0, 10)
-
-        console.log(sorted_entries)
 
         const keys: string = (await Promise.all(
             sorted_entries.map(async ([key], index) => {
@@ -62,20 +62,12 @@ export class LeaderboardsCommand extends Command {
                     name: 'Баланс',
                     value: '```\n' + values + '```',
                     inline: true
-                },
-                {
-                    name: 'Час у ГЧ',
-                    value: '```\n' + 'WIP' + '```',
-                    inline: true
-                },
+                }
             )
             .setColor('#4b73f5')
             .setTimestamp()
 
-        await interaction.reply({
-            embeds: [embed],
-            ephemeral: false
-        })
+        await interaction.editReply({ embeds: [embed] })
     }
 
     reject(interaction: ChatInputCommandInteraction): Promise<void> {

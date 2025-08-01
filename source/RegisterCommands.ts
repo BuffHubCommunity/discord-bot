@@ -58,6 +58,30 @@ import {REST, Routes, SlashCommandBuilder} from "discord.js";
             .setDescription('Переглянути ТОП-10 найактивніших учасників спільноти.')
     ].map((command) => command.toJSON())
 
+    const VerifyCommands = [
+        new SlashCommandBuilder()
+            .setName('перевірити')
+            .setDescription('Певерірити профіль Steam на наявність російських ігор, друзів та груп.')
+            .addStringOption((option) => option
+                .setName('тип')
+                .setDescription('Оберіть тип перевірки')
+                .addChoices(
+                    {name: 'профіль',   value: 'profile'},
+                    {name: 'придбані-ігри',      value: 'games'},
+                    {name: 'бажані-ігри',      value: 'wishlist'},
+                    {name: 'друзів',    value: 'friends'}
+                )
+                .setRequired(true)
+            )
+            .addStringOption((option) => option
+                .setName('посилання')
+                .setDescription('Посилання на профіль учасника.')
+                .setRequired(true)
+            )
+    ]
+
+    const Commands = [...commands, ...VerifyCommands]
+
     const rest = new REST({version: '10'})
         .setToken(process.env.BOT_TOKEN as string)
 
@@ -70,7 +94,7 @@ import {REST, Routes, SlashCommandBuilder} from "discord.js";
                     process.env.CLIENT_ID as string,
                     process.env.GUILD_ID as string
                 ),
-                {body: commands},
+                {body: Commands},
             )
 
             console.log('Guild slash commands registered.')

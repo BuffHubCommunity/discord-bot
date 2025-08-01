@@ -1,6 +1,15 @@
-import {ChatInputCommandInteraction, Client, GuildMember, PermissionResolvable, PermissionsBitField} from 'discord.js'
+import {
+    ChatInputCommandInteraction,
+    Client,
+    EmbedBuilder,
+    GuildMember,
+    PermissionResolvable,
+    PermissionsBitField
+} from 'discord.js'
 
 export abstract class Command {
+    readonly DEFAULT_COLOR = '#4b73f5'
+
     readonly abstract name: string
 
     abstract init(client: Client): void
@@ -11,8 +20,20 @@ export abstract class Command {
 
     abstract canAccept(interaction: ChatInputCommandInteraction): Promise<boolean>
 
-    abstract accept(interaction: ChatInputCommandInteraction): Promise<void>
-    abstract reject(interaction: ChatInputCommandInteraction): Promise<void>
+    abstract accept(interaction: ChatInputCommandInteraction): Promise<any>
+    abstract reject(interaction: ChatInputCommandInteraction): Promise<any>
+
+    async simpleReject(interaction: ChatInputCommandInteraction, title: string, reason: string): Promise<any> {
+        return Promise.resolve(await interaction.editReply({
+            embeds: [
+                new EmbedBuilder()
+                    .setTitle(title)
+                    .setDescription(reason)
+                    .setColor(this.DEFAULT_COLOR)
+                    .setTimestamp()
+            ]
+        }))
+    }
 
     hasPermission(
         member: (GuildMember | any),
