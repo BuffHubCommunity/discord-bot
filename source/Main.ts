@@ -23,7 +23,8 @@ import {Config} from "./Config";
             GatewayIntentBits.GuildMessages,
             GatewayIntentBits.MessageContent,
             GatewayIntentBits.DirectMessages,
-            GatewayIntentBits.GuildPresences
+            GatewayIntentBits.GuildPresences,
+            GatewayIntentBits.GuildVoiceStates,
         ],
         partials: [Partials.Channel]
     })
@@ -37,7 +38,6 @@ import {Config} from "./Config";
         new LeaderboardsCommand(),
         new VerifySteamProfileCommand()
     ]
-    commands.forEach((command) => command.init(client))
 
     client.on('interactionCreate', async (interaction: Interaction<CacheType>) => {
         if (!interaction.guild) return
@@ -61,4 +61,6 @@ import {Config} from "./Config";
     })
 
     await client.login(process.env.BOT_TOKEN)
+
+    commands.forEach((command) => command.init(client))
 })()

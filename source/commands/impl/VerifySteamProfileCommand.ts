@@ -22,12 +22,10 @@ export class VerifySteamProfileCommand extends Command {
 
     async canAccept(interaction: ChatInputCommandInteraction): Promise<boolean> {
         const config = await Config.getConfig()
-        const schema = {
-            'Вартовий КПП': config['команди']['налаштувати-вартового']
-        }
+        const VerifierSchema = config['команди']['налаштувати-вартового']
 
         return Promise.resolve(
-            this.isAdministrator(interaction.member) || (schema['Вартовий КПП'] && this.hasRole(interaction.member, schema['Вартовий КПП'].role.id))
+            this.isAdministrator(interaction.member) || (VerifierSchema && this.hasRole(interaction.member, VerifierSchema.role.id))
         )
     }
 
@@ -46,7 +44,6 @@ export class VerifySteamProfileCommand extends Command {
             )
         }
 
-        // Отримуємо SteamID64, якщо
         let SteamID64: string
 
         if (Username.type === 'SteamID64') {
@@ -100,11 +97,6 @@ export class VerifySteamProfileCommand extends Command {
                 UserProfile.country = (UserProfile.country === 'NULL')
                     ? 'Приховано'
                     : UserProfile.country
-
-                /*        const games_purchased = await this.checkCategory('user_purchased.php', steam_id64)
-                        const wishlist = await this.checkCategory('user_wishlist.php', steam_id64)
-                        const friends = await this.checkCategory('user_friends.php', steam_id64)
-                        const groups = await this.checkCategory('user_groups.php', steam_id64)*/
 
                 const Content = [
                     '```ansi',
@@ -296,8 +288,6 @@ export class VerifySteamProfileCommand extends Command {
                     Fields[Fields.length - 1].value += `\n**... та ще ${BadFriends.length - BadFriends_Format.length}.**`
                 }
 
-                // Список друзів, які проживають у країнах-членах ОДКБ
-
                 return await interaction.editReply({
                     embeds: [
                         new EmbedBuilder()
@@ -311,37 +301,6 @@ export class VerifySteamProfileCommand extends Command {
                 })
             }
         }
-
-        /*try {
-            await interaction.editReply({
-                embeds: [
-
-                    new EmbedBuilder()
-                        .setTitle('Друзі')
-                        .setDescription('Список друзів, які проживають у країнах-членах ОДКБ.')
-                        .addFields(
-                            {
-                                name: 'Нікнейм',
-                                value: BadFriendNames_trim,
-                                inline: true
-                            },
-                            {
-                                name: 'Країна',
-                                value: BadFriendCountries_trim,
-                                inline: true
-                            },
-                        )
-                        .setColor(this.DEFAULT_COLOR)
-                        .setFooter({
-                            text: 'Ця перевірка стала можливою завдяки спільноті Sich',
-                            iconURL: 'https://r.8b.io/82562/images/logo1-h_ledcbxum.png',
-                        })
-                        .setTimestamp()
-                ]
-            })
-        } catch (error) {
-            console.log(error)
-        }*/
     }
 
     async reject(interaction: ChatInputCommandInteraction): Promise<void> {

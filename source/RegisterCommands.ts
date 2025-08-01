@@ -66,10 +66,10 @@ import {REST, Routes, SlashCommandBuilder} from "discord.js";
                 .setName('тип')
                 .setDescription('Оберіть тип перевірки')
                 .addChoices(
-                    {name: 'профіль',   value: 'profile'},
-                    {name: 'придбані-ігри',      value: 'games'},
-                    {name: 'бажані-ігри',      value: 'wishlist'},
-                    {name: 'друзів',    value: 'friends'}
+                    {name: 'профіль', value: 'profile'},
+                    {name: 'придбані-ігри', value: 'games'},
+                    {name: 'бажані-ігри', value: 'wishlist'},
+                    {name: 'друзів', value: 'friends'}
                 )
                 .setRequired(true)
             )
