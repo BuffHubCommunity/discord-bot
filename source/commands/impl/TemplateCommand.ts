@@ -12,7 +12,7 @@ export class TemplateCommand extends Command {
     async canAccept(interaction: ChatInputCommandInteraction): Promise<boolean> {
         const config = await Config.getConfig()
         const schema = {
-            'Вартовий КПП': config['команди']['налаштувати-вартового']
+            'Вартовий КПП': config['commands']['налаштувати-вартового']
         }
 
         return Promise.resolve(

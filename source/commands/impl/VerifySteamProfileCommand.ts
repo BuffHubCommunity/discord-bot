@@ -22,7 +22,7 @@ export class VerifySteamProfileCommand extends Command {
 
     async canAccept(interaction: ChatInputCommandInteraction): Promise<boolean> {
         const config = await Config.getConfig()
-        const VerifierSchema = config['команди']['налаштувати-вартового']
+        const VerifierSchema = config['commands']['налаштувати-вартового']
 
         return Promise.resolve(
             this.isAdministrator(interaction.member) || (VerifierSchema && this.hasRole(interaction.member, VerifierSchema.role.id))

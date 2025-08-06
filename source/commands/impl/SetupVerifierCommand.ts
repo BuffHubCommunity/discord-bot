@@ -27,7 +27,7 @@ export class SetupVerifierCommand extends Command {
         }
 
         await config.update((config) => {
-            config['команди'][this.name] = verifier
+            config['commands'][this.name] = verifier
         })
 
         const embed = new EmbedBuilder()

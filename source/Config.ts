@@ -5,18 +5,18 @@ import {VerifierSchema} from "./commands/impl/SetupVerifierCommand";
 import {EconomySchema} from "./commands/impl/economy/EconomyCommand";
 
 export type ConfigSchema = {
-    'команди': {
+    'commands': {
         'налаштувати-вартового': VerifierSchema,
         'налаштувати-привітання': GreetVerifiedUserSchema,
     },
-    'економіка': EconomySchema
+    'economy': EconomySchema
 }
 
 async function getLowConfig() {
     return (await JSONFilePreset('config.json', {
-        'команди': {},
-        'економіка': {
-            'користувачі': {}
+        'commands': {},
+        'economy': {
+            'users': {}
         }
     }) as unknown as Low<ConfigSchema>)
 }

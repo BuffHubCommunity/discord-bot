@@ -2,7 +2,7 @@ import {
     Client,
     GatewayIntentBits,
     Partials,
-    ChatInputCommandInteraction, Interaction, CacheType, GuildMember, EmbedBuilder
+    ChatInputCommandInteraction, Interaction, CacheType, GuildMember, EmbedBuilder, TextChannel
 } from 'discord.js'
 import {
     GreetVerifiedUserCommand
@@ -63,4 +63,14 @@ import {Config} from "./Config";
     await client.login(process.env.BOT_TOKEN)
 
     commands.forEach((command) => command.init(client))
+
+    /*;((await (await client.guilds.fetch(process.env.GUILD_ID as string)).channels.fetch('1401556527856357436')) as TextChannel).send({
+        embeds: [
+            new EmbedBuilder()
+                .setTitle()
+                .setDescription()
+                .setThumbnail()
+                .setColor('#4b73f5')
+        ]
+    })*/
 })()

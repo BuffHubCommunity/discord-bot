@@ -1,10 +1,54 @@
 import {Command} from '../../Command'
-import {ChatInputCommandInteraction, Client, EmbedBuilder, Guild, GuildMember, User} from 'discord.js'
+import {
+    ChatInputCommandInteraction,
+    Client,
+    EmbedBuilder,
+    Guild,
+    GuildMember,
+    TextBasedChannel,
+    TextChannel,
+    User
+} from 'discord.js'
 import {Config} from "../../../Config";
 
-export type EconomySchema = {
-    'користувачі': { [key: string]: number }
+export type UserEconomySchema = {
+    total_balance: number,
+    total_messages: number,
+    total_voice_time: number,
+    earned_achievements: string[]
 }
+export type EconomySchema = {
+    users: {
+        [key: string]: UserEconomySchema
+    }
+}
+export type VoiceUserSchema = {
+    [user_id: string]: {
+        channel_id: string
+        time_since_last_reward: number
+    }
+}
+
+export type AchievementSchema = {
+    name: string,
+    reward: number,
+    condition: (userId: string) => Promise<boolean>
+}
+
+const achievements: AchievementSchema[] = [
+    {
+        name: 'Перше Повідомлення',
+        reward: 50,
+        condition: async function (userId: string) {
+            const config = await Config.getConfig()
+            const user = config.economy.users[userId]
+
+            return Promise.resolve(
+                !user.earned_achievements.includes(this.name) && user.total_messages === 0
+            )
+        }
+    }
+]
 
 export class EconomyCommand extends Command {
     readonly name = 'економіка'
@@ -18,53 +62,82 @@ export class EconomyCommand extends Command {
 
             if (message.content && message.content.length >= 10) {
                 const config = await Config.getLowConfig()
-                const user_id = message.author.id
+                const userId = message.author.id
 
-                await config.update((config) => {
-                    const user = config[this.name]['користувачі']
-                    user[user_id] = (user[user_id] || 0) + 1
+                let totalReward: number = 1 // Одразу зараховуємо за повідомлення.
+                let earnedAchievements: AchievementSchema[] = []
+
+                for (let achievement of achievements) {
+                    const completed = await achievement.condition(userId)
+
+                    if (completed) {
+                        totalReward += achievement.reward
+                        earnedAchievements.push(achievement)
+                    }
+                }
+
+                await config.update(async (Config) => {
+                    const user = Config.economy.users[userId]
+
+                    user.total_balance += totalReward
+                    user.total_messages += 1
+                    user.earned_achievements.push(...earnedAchievements.map((achievement) => achievement.name))
                 })
+
+                const botChannel = guild.channels.cache.get('1361047517977907451') as TextChannel
+                for (let achievement of earnedAchievements) {
+                    await botChannel.send({
+                        content: `<@${userId}>`,
+                        embeds: [
+                            new EmbedBuilder()
+                                .setAuthor({name: 'Ви отримали нове досягнення!'})
+                                .setTitle(`"${achievement.name}"`)
+                                .setDescription(`Вам зараховано додаткові ${achievement.reward} монет.`)
+                                .setColor(this.DEFAULT_COLOR)
+                                .setThumbnail('https://images.emojiterra.com/twitter/v13.1/512px/1f3c6.png')
+                                .setTimestamp()
+                        ]
+                    })
+                }
             }
         })
 
         // Зараховуємо валюту за проведений час у ГЧ.
         await guild.members.fetch()
+        const usersInVoiceChannels: VoiceUserSchema = {}
 
-        type UserDataSchema = {
-            [user_id: string]: {
-                channel_id: string
-                time_since_last_reward: number
-            }
-        }
-        const UsersInVC: UserDataSchema = {}
+        for (let [userId, user] of guild.members.cache) {
+            if (!user.voice.channel) continue
 
-        for (let [UserID, User] of guild.members.cache) {
-            if (User.voice.channel) {
-                UsersInVC[UserID] = {
-                    channel_id: User.voice.channel.id,
-                    time_since_last_reward: Date.now()
-                }
+            usersInVoiceChannels[userId] = {
+                channel_id: user.voice.channel.id,
+                time_since_last_reward: Date.now()
             }
         }
 
         setInterval(async () => {
-            for (let UserID of Object.keys(UsersInVC)) {
-                const UserData = UsersInVC[UserID]
+            for (let userId of Object.keys(usersInVoiceChannels)) {
+                const UserData = usersInVoiceChannels[userId]
 
-                const UserCountInCurrentVC = Object.values(UsersInVC).filter((ThisUserData) => ThisUserData.channel_id === UserData.channel_id).length
+                const UserCountInCurrentVC = Object.values(usersInVoiceChannels).filter((ThisUserData) => ThisUserData.channel_id === UserData.channel_id).length
                 if (UserCountInCurrentVC <= 1) continue
 
-                if ((Date.now() - UserData.time_since_last_reward) >= (1000 * 60 * 5)) {
-                    const user = (guild.members.cache.get(UserID) as GuildMember)
+                const FiveMinutesPassed = (Date.now() - UserData.time_since_last_reward) >= (1000 * 60 * 5)
+
+                if (FiveMinutesPassed) {
+                    const User = (guild.members.cache.get(userId) as GuildMember)
 
                     // Передивлюємось, чи справді користувач у ГЧ.
-                    if (!user || !user.voice.channel) {
-                        delete UsersInVC[UserID]
+                    if (!User || !User?.voice?.channel || (User?.voice?.channel?.id === guild?.afkChannel?.id)) {
+                        delete usersInVoiceChannels[userId]
                     } else {
-                        // Зараховуємо валюту та скидуємо time_since_last_reward.
-                        await (await Config.getLowConfig()).update((Config) => {
-                            const user = Config[this.name]['користувачі']
-                            user[UserID] = (user[UserID] || 0) + 1
+                        const config = await Config.getLowConfig()
+
+                        await config.update((config) => {
+                            const user = config.economy.users[userId]
+
+                            user.total_balance += 1
+                            user.total_voice_time += (60 * 50) * 1000
                         })
 
                         UserData.time_since_last_reward = Date.now()
@@ -80,7 +153,7 @@ export class EconomyCommand extends Command {
 
             // Користувач під'єднався до ГЧ.
             if (!OldChannel && NewChannel) {
-                UsersInVC[UserID] = {
+                usersInVoiceChannels[UserID] = {
                     channel_id: NewChannel.id,
                     time_since_last_reward: Date.now()
                 }
@@ -88,10 +161,10 @@ export class EconomyCommand extends Command {
 
             // Користувач перемістився у інший ГЧ.
             if (OldChannel && NewChannel && (OldChannel !== NewChannel)) {
-                if (UserID in UsersInVC) {
-                    UsersInVC[UserID].channel_id = NewChannel.id
+                if (UserID in usersInVoiceChannels) {
+                    usersInVoiceChannels[UserID].channel_id = NewChannel.id
                 } else {
-                    UsersInVC[UserID] = {
+                    usersInVoiceChannels[UserID] = {
                         channel_id: NewChannel.id,
                         time_since_last_reward: Date.now()
                     }
@@ -100,7 +173,7 @@ export class EconomyCommand extends Command {
 
             // Користувач вийшов з ГЧ.
             if (OldChannel && !NewChannel) {
-                delete UsersInVC[UserID]
+                delete usersInVoiceChannels[UserID]
             }
         })
     }

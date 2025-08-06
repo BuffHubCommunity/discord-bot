@@ -11,16 +11,15 @@ export class BalanceCommand extends Command {
     }
 
     async accept(interaction: ChatInputCommandInteraction): Promise<void> {
-        await interaction.deferReply()
+        await interaction.deferReply({ephemeral: true})
 
         const config = await Config.getConfig()
-        const balance =  config['економіка']['користувачі'][(interaction.member as GuildMember).user.id] || 0
+        const balance =  config['economy']['users'][(interaction.member as GuildMember).user.id] || 0
 
         const embed = new EmbedBuilder()
             .setTitle('💰 Баланс')
-            .setDescription(`Ваш поточний баланс: \`\`\`${balance}\`\`\``)
+            .setDescription(`Ваш поточний баланс: \`\`\`${balance.total_balance}\`\`\``)
             .setColor('#4b73f5')
-            .setTimestamp()
 
         await interaction.editReply({
             embeds: [embed]

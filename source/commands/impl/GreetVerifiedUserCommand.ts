@@ -15,7 +15,7 @@ export class GreetVerifiedUserCommand extends Command {
         client.on('guildMemberUpdate', async (old_member, new_member) => {
             const config = await Config.getConfig()
             const schema = {
-                'привітання': config['команди'][this.name]
+                'привітання': config['commands'][this.name]
             }
 
             if (!schema['привітання']) return
@@ -59,7 +59,7 @@ export class GreetVerifiedUserCommand extends Command {
         }
 
         await config.update((config) => {
-            config['команди']['налаштувати-привітання'] = greet_schema
+            config['commands']['налаштувати-привітання'] = greet_schema
         })
 
         const embed = new EmbedBuilder()

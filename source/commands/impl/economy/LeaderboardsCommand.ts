@@ -1,6 +1,7 @@
 import {Command} from '../../Command'
 import {ChatInputCommandInteraction, Client, EmbedBuilder, Guild, GuildMember} from 'discord.js'
 import {Config} from "../../../Config";
+import {UserEconomySchema} from "./EconomyCommand";
 
 export class LeaderboardsCommand extends Command {
     readonly name = 'таблиця-лідерів'
@@ -18,7 +19,7 @@ export class LeaderboardsCommand extends Command {
         const guild = (interaction.guild as Guild) // Ніколи не undefined, перевіряємо у Main.ts.
 
         const config = await Config.getConfig()
-        const users = config['економіка']['користувачі']
+        const users = config['economy']['users']
 
         // Видаляємо учасників, яких немає у спільноті, та залишаємо своїх.
         const valid_users = await Promise.all(
@@ -31,9 +32,9 @@ export class LeaderboardsCommand extends Command {
 
         //
         const sorted_entries = valid_users
-            .filter((entry): entry is [string, number] => !!entry)
+            .filter((entry): entry is [string, UserEconomySchema] => !!entry)
             .map((entry) => entry)
-            .sort((a, b) => b[1] - a[1])
+            .sort((a, b) => b[1].total_balance - a[1].total_balance)
             .slice(0, 10)
 
         const keys: string = (await Promise.all(
@@ -47,7 +48,7 @@ export class LeaderboardsCommand extends Command {
                 }
             })
         )).join('\n')
-        const values: string = sorted_entries.map(([, value]) => value).join('\n')
+        const values: string = sorted_entries.map(([, value]) => value.total_balance).join('\n')
 
         const embed = new EmbedBuilder()
             .setTitle("💰 Таблиця Лідерів")
