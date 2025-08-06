@@ -30,19 +30,18 @@ export type VoiceUserSchema = {
 }
 
 export type AchievementSchema = {
+    id: string,
     name: string,
     reward: number,
-    condition: (userId: string) => Promise<boolean>
+    condition: (user: UserEconomySchema) => Promise<boolean>
 }
 
 const achievements: AchievementSchema[] = [
     {
+        id: 'first_message',
         name: 'Перше Повідомлення',
         reward: 50,
-        condition: async function (userId: string) {
-            const config = await Config.getConfig()
-            const user = config.economy.users[userId]
-
+        condition: async function (user: UserEconomySchema) {
             return Promise.resolve(
                 !user.earned_achievements.includes(this.name) && user.total_messages === 0
             )
@@ -58,47 +57,72 @@ export class EconomyCommand extends Command {
 
         // Зараховуємо валюту за повідомлення.
         client.on('messageCreate', async (message) => {
-            if (message.author.bot) return
+            if (message.author.bot || message.content?.length < 10) return
 
-            if (message.content && message.content.length >= 10) {
-                const config = await Config.getLowConfig()
-                const userId = message.author.id
+            const config = await Config.getLowConfig()
 
-                let totalReward: number = 1 // Одразу зараховуємо за повідомлення.
-                let earnedAchievements: AchievementSchema[] = []
+            const userId = message.author.id
+            const user = config.data.economy.users[userId]
 
-                for (let achievement of achievements) {
-                    const completed = await achievement.condition(userId)
+            // Випадковий бонус.
+            const roll = Math.floor(Math.random() * 100) + 1
+            const randomBoost = (roll === 1)
 
-                    if (completed) {
-                        totalReward += achievement.reward
-                        earnedAchievements.push(achievement)
-                    }
-                }
+            if (randomBoost) {
+                await config.update((config) => {
+                    const user = config.economy.users[userId]
 
-                await config.update(async (Config) => {
-                    const user = Config.economy.users[userId]
-
-                    user.total_balance += totalReward
-                    user.total_messages += 1
-                    user.earned_achievements.push(...earnedAchievements.map((achievement) => achievement.name))
+                    user.total_balance += 1
                 })
 
-                const botChannel = guild.channels.cache.get('1361047517977907451') as TextChannel
-                for (let achievement of earnedAchievements) {
-                    await botChannel.send({
-                        content: `<@${userId}>`,
-                        embeds: [
-                            new EmbedBuilder()
-                                .setAuthor({name: 'Ви отримали нове досягнення!'})
-                                .setTitle(`"${achievement.name}"`)
-                                .setDescription(`Вам зараховано додаткові ${achievement.reward} монет.`)
-                                .setColor(this.DEFAULT_COLOR)
-                                .setThumbnail('https://images.emojiterra.com/twitter/v13.1/512px/1f3c6.png')
-                                .setTimestamp()
-                        ]
-                    })
+                await message.reply({
+                    embeds: [
+                        new EmbedBuilder()
+                            .setTitle('Бот зірвав куш.')
+                            .setDescription(`Вам зараховано додаткові 10 монет.`)
+                            .setColor(this.DEFAULT_COLOR)
+                            .setThumbnail('https://em-content.zobj.net/source/twitter/53/slot-machine_1f3b0.png')
+                    ]
+                })
+            }
+
+            //
+            let totalReward: number = 1 // Одразу зараховуємо за повідомлення.
+            let earnedAchievements: AchievementSchema[] = []
+
+            for (let achievement of achievements) {
+                const completed = await achievement.condition(user)
+
+                if (completed) {
+                    totalReward += achievement.reward
+                    earnedAchievements.push(achievement)
                 }
+            }
+
+            await config.update((config) => {
+                const user = config.economy.users[userId]
+
+                user.total_balance += totalReward
+                user.total_messages += 1
+
+                const earnedAchievementIDs = earnedAchievements.map((achievement) => achievement.id)
+                user.earned_achievements.push(...earnedAchievementIDs)
+            })
+
+            const botChannel = guild.channels.cache.get('1361047517977907451') as TextChannel
+
+            for (let achievement of earnedAchievements) {
+                await botChannel.send({
+                    content: `<@${userId}>`,
+                    embeds: [
+                        new EmbedBuilder()
+                            .setAuthor({name: 'Ви отримали нове досягнення!'})
+                            .setTitle(`"${achievement.name}"`)
+                            .setDescription(`Вам зараховано додаткові ${achievement.reward} монет.`)
+                            .setColor(this.DEFAULT_COLOR)
+                            .setThumbnail('https://images.emojiterra.com/twitter/v13.1/512px/1f3c6.png')
+                    ]
+                })
             }
         })
 
@@ -117,18 +141,18 @@ export class EconomyCommand extends Command {
 
         setInterval(async () => {
             for (let userId of Object.keys(usersInVoiceChannels)) {
-                const UserData = usersInVoiceChannels[userId]
+                const userData = usersInVoiceChannels[userId]
 
-                const UserCountInCurrentVC = Object.values(usersInVoiceChannels).filter((ThisUserData) => ThisUserData.channel_id === UserData.channel_id).length
-                if (UserCountInCurrentVC <= 1) continue
+                const userCountInCurrentVoiceChannel = Object.values(usersInVoiceChannels).filter((ThisUserData) => ThisUserData.channel_id === userData.channel_id).length
+                if (userCountInCurrentVoiceChannel <= 1) continue
 
-                const FiveMinutesPassed = (Date.now() - UserData.time_since_last_reward) >= (1000 * 60 * 5)
+                const fiveMinutesPassed = (Date.now() - userData.time_since_last_reward) >= (1000 * 60 * 5)
 
-                if (FiveMinutesPassed) {
-                    const User = (guild.members.cache.get(userId) as GuildMember)
+                if (fiveMinutesPassed) {
+                    const user = (guild.members.cache.get(userId) as GuildMember)
 
                     // Передивлюємось, чи справді користувач у ГЧ.
-                    if (!User || !User?.voice?.channel || (User?.voice?.channel?.id === guild?.afkChannel?.id)) {
+                    if (!user || !user?.voice?.channel || (user?.voice?.channel?.id === guild?.afkChannel?.id)) {
                         delete usersInVoiceChannels[userId]
                     } else {
                         const config = await Config.getLowConfig()
@@ -138,43 +162,66 @@ export class EconomyCommand extends Command {
 
                             user.total_balance += 1
                             user.total_voice_time += (60 * 50) * 1000
+
+                            console.info(`@${userId} вже як 5 хвилин у голосовому чаті! +1.`)
                         })
 
-                        UserData.time_since_last_reward = Date.now()
+                        userData.time_since_last_reward = Date.now()
                     }
                 }
             }
         }, (1000 * 30))
 
         client.on('voiceStateUpdate', (OldState, NewState) => {
-            const OldChannel = OldState.channel
-            const NewChannel = NewState.channel
-            const UserID = NewState.id
+            const oldChannel = OldState.channel
+            const newChannel = NewState.channel
+            const userId = NewState.id
 
             // Користувач під'єднався до ГЧ.
-            if (!OldChannel && NewChannel) {
-                usersInVoiceChannels[UserID] = {
-                    channel_id: NewChannel.id,
+            if (!oldChannel && newChannel) {
+                usersInVoiceChannels[userId] = {
+                    channel_id: newChannel.id,
                     time_since_last_reward: Date.now()
                 }
+
+                console.info(`@${userId} під'єднався до голосового чату, починаємо рахувати.`)
             }
 
             // Користувач перемістився у інший ГЧ.
-            if (OldChannel && NewChannel && (OldChannel !== NewChannel)) {
-                if (UserID in usersInVoiceChannels) {
-                    usersInVoiceChannels[UserID].channel_id = NewChannel.id
+            if (oldChannel && newChannel && (oldChannel !== newChannel)) {
+                if (userId in usersInVoiceChannels) {
+                    usersInVoiceChannels[userId].channel_id = newChannel.id
                 } else {
-                    usersInVoiceChannels[UserID] = {
-                        channel_id: NewChannel.id,
+                    usersInVoiceChannels[userId] = {
+                        channel_id: newChannel.id,
                         time_since_last_reward: Date.now()
                     }
                 }
+
+                console.info(`@${userId} перемістився до голосового чату, продовжуємо рахувати.`)
             }
 
             // Користувач вийшов з ГЧ.
-            if (OldChannel && !NewChannel) {
-                delete usersInVoiceChannels[UserID]
+            if (oldChannel && !newChannel) {
+                delete usersInVoiceChannels[userId]
+
+                console.info(`@${userId} вийшов з голосового чату, більше не рахуємо.`)
             }
+        })
+
+        client.on('messageDelete', async (message) => {
+            if (message.partial) return
+
+            const config = await Config.getLowConfig()
+            const userId = message.author.id
+
+            await config.update((config) => {
+                const user = config.economy.users[userId]
+
+                user.total_balance -= 2
+            })
+
+            console.info(`@${message.author.id} видалив повідомлення! -2.`)
         })
     }
 
