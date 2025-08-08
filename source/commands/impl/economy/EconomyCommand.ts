@@ -49,6 +49,8 @@ const achievements: AchievementSchema[] = [
     }
 ]
 
+
+
 export class EconomyCommand extends Command {
     readonly name = 'економіка'
 
@@ -65,14 +67,14 @@ export class EconomyCommand extends Command {
             const user = config.data.economy.users[userId]
 
             // Випадковий бонус.
-            const roll = Math.floor(Math.random() * 100) + 1
+            const roll = Math.floor(Math.random() * 111) + 1
             const randomBoost = (roll === 1)
 
             if (randomBoost) {
                 await config.update((config) => {
                     const user = config.economy.users[userId]
 
-                    user.total_balance += 1
+                    user.total_balance += 10
                 })
 
                 await message.reply({
