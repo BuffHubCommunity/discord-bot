@@ -72,41 +72,6 @@ export class LeaderboardsCommand extends Command {
                     .setFooter({text: `Ви знаходитесь на ${yourPlace} місці.`})
             ]
         })
-
-        //
-
-        /*const keys: string = (await Promise.all(
-            sortedEntries.map(async ([key], index) => {
-                const member = await this.getUser(guild, key)
-
-                if (member) {
-                    return `${index + 1}) ${member.user.username || member.user.globalName}`
-                } else {
-                    return `${index + 1}) ${key}`
-                }
-            })
-        )).join('\n')
-        const values: string = sortedEntries.map(([, value]) => value.total_balance).join('\n')
-
-        const embed = new EmbedBuilder()
-            .setTitle("💰 Таблиця Лідерів")
-            .setDescription("Можливо хтось хоче зайняти місце? <:soldier_goon:1378505616401760346>")
-            .addFields(
-                {
-                    name: 'Місце & Нікнейм',
-                    value: '```\n' + keys + '```',
-                    inline: true
-                },
-                {
-                    name: 'Баланс',
-                    value: '```\n' + values + '```',
-                    inline: true
-                }
-            )
-            .setColor('#4b73f5')
-            .setTimestamp()
-
-        await interaction.editReply({ embeds: [embed] })*/
     }
 
     reject(interaction: ChatInputCommandInteraction): Promise<void> {

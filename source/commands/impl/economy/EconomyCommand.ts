@@ -67,7 +67,7 @@ export class EconomyCommand extends Command {
             const user = config.data.economy.users[userId]
 
             // Випадковий бонус.
-            const roll = Math.floor(Math.random() * 111) + 1
+            const roll = Math.floor(Math.random() * 200) + 1
             const randomBoost = (roll === 1)
 
             if (randomBoost) {
@@ -104,11 +104,15 @@ export class EconomyCommand extends Command {
             await config.update((config) => {
                 const user = config.economy.users[userId]
 
-                user.total_balance += totalReward
-                user.total_messages += 1
+                if (user) {
+                    user.total_balance += totalReward
+                    user.total_messages += 1
 
-                const earnedAchievementIDs = earnedAchievements.map((achievement) => achievement.id)
-                user.earned_achievements.push(...earnedAchievementIDs)
+                    const earnedAchievementIDs = earnedAchievements.map((achievement) => achievement.id)
+                    user.earned_achievements.push(...earnedAchievementIDs)
+                } else {
+                    console.info(`@${userId} === undefined.`)
+                }
             })
 
             const botChannel = guild.channels.cache.get('1361047517977907451') as TextChannel
@@ -162,10 +166,14 @@ export class EconomyCommand extends Command {
                         await config.update((config) => {
                             const user = config.economy.users[userId]
 
-                            user.total_balance += 1
-                            user.total_voice_time += (60 * 50) * 1000
+                            if (user) {
+                                user.total_balance += 1
+                                user.total_voice_time += (60 * 50) * 1000
 
-                            console.info(`@${userId} вже як 5 хвилин у голосовому чаті! +1.`)
+                                console.info(`@${userId} вже як 5 хвилин у голосовому чаті! +1.`)
+                            } else {
+                                console.info(`@${userId} вже як 5 хвилин у голосовому чаті! Він відсутній у БД.`)
+                            }
                         })
 
                         userData.time_since_last_reward = Date.now()
@@ -220,10 +228,14 @@ export class EconomyCommand extends Command {
             await config.update((config) => {
                 const user = config.economy.users[userId]
 
-                user.total_balance -= 2
-            })
+                if (user) {
+                    user.total_balance -= 2
 
-            console.info(`@${message.author.id} видалив повідомлення! -2.`)
+                    console.info(`@${message.author.id} видалив повідомлення! -2.`)
+                } else {
+                    console.info(`@${message.author.id} видалив повідомлення! Він відсутній у БД.`)
+                }
+            })
         })
     }
 

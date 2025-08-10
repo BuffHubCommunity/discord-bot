@@ -50,13 +50,49 @@ import {REST, Routes, SlashCommandBuilder} from "discord.js";
             .setDescription('Деталі про економіку спільноти.'),
 
         new SlashCommandBuilder()
-            .setName('баланс')
-            .setDescription('Перевірити поточну кількість Бафів.'),
-
-        new SlashCommandBuilder()
             .setName('таблиця-лідерів')
             .setDescription('Переглянути ТОП-10 найактивніших учасників спільноти.')
     ].map((command) => command.toJSON())
+
+    const economy = [
+        new SlashCommandBuilder()
+            .setName('баланс')
+            .setDescription('Перевірити поточну кількість монет.'),
+
+        new SlashCommandBuilder()
+            .setName('баланс-адмін')
+            .setDescription('Маніпуляції з балансом учасників.')
+            .addUserOption((option) => option
+                .setName('учасник')
+                .setDescription('Учасник, якому потрібно відредагувати баланс.')
+                .setRequired(true)
+            )
+            .addStringOption((option) => option
+                .setName('дія')
+                .setDescription('Тип дії відносно до балансу.')
+                .setRequired(true)
+                .addChoices(
+                    {name: 'додати', value: 'plus'},
+                    {name: 'відняти', value: 'minus'}
+                )
+            )
+            .addNumberOption((option) => option
+                .setName('кількість')
+                .setDescription('Кількість монет для додання/відняття від балансу.')
+                .setRequired(true)
+                .setMinValue(1)
+            ),
+
+        new SlashCommandBuilder()
+            .setName('казино')
+            .setDescription('Маніпуляції з балансом учасників.')
+            .addNumberOption((option) => option
+                .setName('ставка')
+                .setDescription('Кількість монет для депозиту.')
+                .setRequired(true)
+                .setMinValue(1)
+            )
+    ]
 
     const VerifyCommands = [
         new SlashCommandBuilder()
@@ -80,7 +116,7 @@ import {REST, Routes, SlashCommandBuilder} from "discord.js";
             )
     ]
 
-    const Commands = [...commands, ...VerifyCommands]
+    const Commands = [...commands, ...VerifyCommands, ...economy]
 
     const rest = new REST({version: '10'})
         .setToken(process.env.BOT_TOKEN as string)

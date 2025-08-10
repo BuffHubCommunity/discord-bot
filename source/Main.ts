@@ -14,6 +14,7 @@ import {BalanceCommand} from "./commands/impl/economy/BalanceCommand";
 import {LeaderboardsCommand} from "./commands/impl/economy/LeaderboardsCommand";
 import {VerifySteamProfileCommand} from "./commands/impl/VerifySteamProfileCommand";
 import {Config} from "./Config";
+import {CasinoCommand} from "./commands/impl/economy/CasinoCommand";
 
 (async () => {
     const client = new Client({
@@ -36,7 +37,8 @@ import {Config} from "./Config";
         new EconomyCommand(),
         new BalanceCommand(),
         new LeaderboardsCommand(),
-        new VerifySteamProfileCommand()
+        new VerifySteamProfileCommand(),
+        new CasinoCommand()
     ]
 
     client.on('interactionCreate', async (interaction: Interaction<CacheType>) => {
