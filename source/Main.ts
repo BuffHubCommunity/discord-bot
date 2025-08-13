@@ -38,7 +38,7 @@ import {CasinoCommand} from "./commands/impl/economy/CasinoCommand";
 
         new EconomyCommand(),
         new BalanceCommand(),
-        //new LeaderboardsCommand(),
+        new LeaderboardsCommand()
         //new CasinoCommand()
     ]
 

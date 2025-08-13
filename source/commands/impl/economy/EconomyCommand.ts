@@ -150,12 +150,11 @@ export class EconomyCommand extends Command {
 
             // Користувач під'єднався до ГЧ.
             if (!oldChannel && newChannel) {
-                console.log(`-# @${mainMember.user.tag} під'єднався до #${newChannel.name} (${newChannel.members.size}).`)
-
                 // Рахуємо монети лише від двух учасників.
                 switch (newChannel.members.size) {
                     case 1: {
                         // Учасник самотній у голосовому чаті, не рахуємо монети.
+                        console.log(`-# @${mainMember.user.tag} під'єднався до #${newChannel.name} (${newChannel.members.size}).`)
                         break
                     }
 
