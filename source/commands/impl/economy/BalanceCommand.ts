@@ -39,7 +39,7 @@ export class BalanceCommand extends Command {
                             name: 'Час у ГЧ',
                             value: [
                                 '```ansi',
-                                `⌚ ${userEconomy.voice_time_spent}`,
+                                `⌚ ${this.millisToTime(userEconomy.voice_time_spent)}`,
                                 '```'
                             ].join('\n'),
                             inline: true
@@ -81,8 +81,9 @@ export class BalanceCommand extends Command {
         const totalSeconds = Math.floor(millis / 1000)
 
         const hours = Math.floor(totalSeconds / 3600)
-        const minutes = Math.floor((totalSeconds % 3600) / 60)
+        const minutes = Math.floor((totalSeconds % 3600) / 60);
+        const seconds = totalSeconds % 60
 
-        return `${hours}г ${minutes}хв`
+        return `${hours}г ${minutes}хв ${seconds}с`
     }
 }

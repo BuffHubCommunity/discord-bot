@@ -25,7 +25,7 @@ import {CasinoCommand} from "./commands/impl/economy/CasinoCommand";
             GatewayIntentBits.MessageContent,
             GatewayIntentBits.DirectMessages,
             GatewayIntentBits.GuildPresences,
-            GatewayIntentBits.GuildVoiceStates,
+            GatewayIntentBits.GuildVoiceStates
         ],
         partials: [Partials.Channel]
     })
@@ -36,8 +36,8 @@ import {CasinoCommand} from "./commands/impl/economy/CasinoCommand";
         new TemplateCommand(),
         new VerifySteamProfileCommand(),
 
-        new EconomyCommand()
-        //new BalanceCommand(),
+        new EconomyCommand(),
+        new BalanceCommand(),
         //new LeaderboardsCommand(),
         //new CasinoCommand()
     ]
