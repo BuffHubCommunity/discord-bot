@@ -9,7 +9,7 @@ import {
 } from './commands/impl/GreetVerifiedUserCommand'
 import {TemplateCommand} from "./commands/impl/TemplateCommand";
 import {SetupVerifierCommand} from "./commands/impl/SetupVerifierCommand";
-import {EconomyCommand} from "./commands/impl/economy/EconomyCommand";
+import {EconomyCommand, UserEconomySchema} from "./commands/impl/economy/EconomyCommand";
 import {BalanceCommand} from "./commands/impl/economy/BalanceCommand";
 import {LeaderboardsCommand} from "./commands/impl/economy/LeaderboardsCommand";
 import {VerifySteamProfileCommand} from "./commands/impl/VerifySteamProfileCommand";
@@ -34,11 +34,12 @@ import {CasinoCommand} from "./commands/impl/economy/CasinoCommand";
         new GreetVerifiedUserCommand(),
         new SetupVerifierCommand(),
         new TemplateCommand(),
-        new EconomyCommand(),
-        new BalanceCommand(),
-        new LeaderboardsCommand(),
         new VerifySteamProfileCommand(),
-        new CasinoCommand()
+
+        new EconomyCommand()
+        //new BalanceCommand(),
+        //new LeaderboardsCommand(),
+        //new CasinoCommand()
     ]
 
     client.on('interactionCreate', async (interaction: Interaction<CacheType>) => {
@@ -76,3 +77,24 @@ import {CasinoCommand} from "./commands/impl/economy/CasinoCommand";
         ]
     })*/
 })()
+
+export async function verifyUserIntegrity(userId: string) {
+    const config = await Config.getLowConfig()
+
+    const user: UserEconomySchema = config.data.economy.users[userId]
+
+    if (!user) {
+        await config.update((config) => {
+            config.economy.users[userId] = {
+                balance: 0,
+                messages_sent: 0,
+                voice_time_spent: 0,
+                achievements: []
+            }
+        })
+    }
+}
+
+export const Main = {
+    verifyUserIntegrity: verifyUserIntegrity
+}

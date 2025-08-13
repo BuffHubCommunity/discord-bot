@@ -30,7 +30,7 @@ export class BalanceCommand extends Command {
                             name: 'Мій Баланс',
                             value: [
                                 '```ansi',
-                                `🪙 ${userEconomy.total_balance}`,
+                                `🪙 ${userEconomy.balance}`,
                                 '```'
                             ].join('\n'),
                             inline: false
@@ -39,7 +39,7 @@ export class BalanceCommand extends Command {
                             name: 'Час у ГЧ',
                             value: [
                                 '```ansi',
-                                `⌚ ${this.millisToTime(userEconomy.total_voice_time)}`,
+                                `⌚ ${userEconomy.voice_time_spent}`,
                                 '```'
                             ].join('\n'),
                             inline: true
@@ -48,7 +48,7 @@ export class BalanceCommand extends Command {
                             name: 'Повідомлення у ТЧ',
                             value: [
                                 '```ansi',
-                                `✉️ ${userEconomy.total_messages}`,
+                                `✉️ ${userEconomy.messages_sent}`,
                                 '```'
                             ].join('\n'),
                             inline: true

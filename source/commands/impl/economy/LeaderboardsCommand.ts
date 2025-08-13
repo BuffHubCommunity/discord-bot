@@ -34,7 +34,7 @@ export class LeaderboardsCommand extends Command {
 
         const sortedEntries = validUsers
             .filter((entry): entry is [/* userId: */ string, /* userEconomy */ UserEconomySchema] => !!entry) // Прибираємо усіх undefined користувачів.
-            .sort(([, userEconomy1], [, userEconomy2]) => userEconomy2.total_balance - userEconomy1.total_balance)
+            .sort(([, userEconomy1], [, userEconomy2]) => userEconomy2.balance - userEconomy1.balance)
 
         const yourIndex: number = sortedEntries.findIndex(([userId, userEconomy]) => userId === interaction.user.id)
         const yourPlace: string = yourIndex === -1 ? '?' : String(yourIndex + 1)
@@ -50,7 +50,7 @@ export class LeaderboardsCommand extends Command {
             const place: string = `${index < 10 ? ' ' : ''}${index}) `
 
             const padding = username.padEnd(maxUsernameLength, ' ')
-            contentArray.push(`${place}${padding}\t${userEconomy.total_balance}`)
+            contentArray.push(`${place}${padding}\t${userEconomy.balance}`)
 
             if (contentArray.length >= 10) break
         }

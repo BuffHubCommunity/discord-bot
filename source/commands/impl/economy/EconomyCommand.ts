@@ -7,22 +7,34 @@ import {
     GuildMember,
     TextBasedChannel,
     TextChannel,
-    User
+    User,
+    ChannelType
 } from 'discord.js'
 import {Config} from "../../../Config";
+import {Main} from "../../../Main";
 
 export type UserEconomySchema = {
-    total_balance: number,
-    total_messages: number,
-    total_voice_time: number,
-    earned_achievements: string[]
+    balance: number,
+    messages_sent: number,
+    voice_time_spent: number,
+
+    achievements: string[]
 }
 export type EconomySchema = {
     users: {
         [key: string]: UserEconomySchema
     }
 }
-export type VoiceUserSchema = {
+
+export type VoiceChannelMembersSchema = {
+    [user_id: string]: VoiceChannelMemberSchema
+}
+export type VoiceChannelMemberSchema = {
+    channel_id: string,
+    voice_time_spent: number
+}
+
+export type VoiceDataSchema = {
     [user_id: string]: {
         channel_id: string
         time_since_last_reward: number
@@ -37,7 +49,7 @@ export type AchievementSchema = {
 }
 
 const achievements: AchievementSchema[] = [
-    {
+    /*{
         id: 'first_message',
         name: 'Перше Повідомлення',
         reward: 50,
@@ -46,9 +58,8 @@ const achievements: AchievementSchema[] = [
                 !user.earned_achievements.includes(this.name) && user.total_messages === 0
             )
         }
-    }
+    }*/
 ]
-
 
 
 export class EconomyCommand extends Command {
@@ -56,6 +67,125 @@ export class EconomyCommand extends Command {
 
     async init(client: Client): Promise<void> {
         const guild = (client.guilds.cache.get(process.env.GUILD_ID as string) as Guild)
+        await guild.members.fetch()
+
+        const voiceChannelMembers: VoiceChannelMembersSchema = {}
+
+        client.on('messageDelete', async (message) => {
+            if (message.partial) return
+
+            await Main.verifyUserIntegrity(message.author.id)
+
+            const config = await Config.getLowConfig()
+
+            const username = (message.author.globalName || message.author.username)
+            const userId = message.author.id
+
+            await config.update((config) => {
+                const user = config.economy.users[userId]
+
+                user.balance -= 2
+
+                console.log(`[messageDelete] @${username}(${userId}) видалив повідомлення. -2`)
+            })
+        })
+
+        client.on('messageCreate', async (message) => {
+            await Main.verifyUserIntegrity(message.author.id)
+
+            if (message.author?.bot) return
+            if (message.content?.length < 10) return
+            if (message.channel.type !== ChannelType.GuildText) return
+
+            const config = await Config.getLowConfig()
+
+            const username = (message.author.globalName || message.author.username)
+            const userId = message.author.id
+            const user: UserEconomySchema = config.data.economy.users[userId]
+
+            // TODO: бонуси
+
+            // TODO: ачівки
+
+            // Зараховуємо монету за повідомлення.
+            await config.update((config) => {
+                const user = config.economy.users[userId]
+
+                user.balance += 1
+                user.messages_sent += 1
+
+                console.log(`[messageCreate] @${username}(${userId}) надіслав повідомлення. +1`)
+            })
+        })
+
+        // Додаємо усіх наявних учасників у голосових чатах до списку.
+        for (let [userId, member] of guild.members.cache) {
+            if (!member.voice.channel) continue
+            const username = member.user.globalName || member.user.username
+
+            voiceChannelMembers[userId] = {
+                channel_id: member.voice.channel.id,
+                voice_time_spent: Date.now()
+            }
+
+            console.log(`[init] @${username}(${userId}) приєднався до голосового чату.`)
+        }
+
+        client.on('voiceStateUpdate', async (oldState, newState) => {
+            await Main.verifyUserIntegrity(newState.id)
+
+            const oldChannel = oldState.channel
+            const newChannel = newState.channel
+
+            const config = await Config.getLowConfig()
+
+            const userId = newState.id
+            const user = (newState.member as GuildMember)?.user
+            const username = (user?.globalName || user?.username || '?')
+
+            // Користувач під'єднався до ГЧ.
+            if (!oldChannel && newChannel) {
+                voiceChannelMembers[userId] = {
+                    channel_id: newChannel.id,
+                    voice_time_spent: Date.now()
+                }
+
+                console.log(`[voiceStateUpdate] @${username}(${userId}) приєднався до голосового чату.`)
+            }
+
+            // Користувач перемістився у інший ГЧ.
+            if (oldChannel && newChannel && (oldChannel !== newChannel)) {
+                if (userId in voiceChannelMembers) {
+                    voiceChannelMembers[userId].channel_id = newChannel.id
+                } else {
+                    voiceChannelMembers[userId] = {
+                        channel_id: newChannel.id,
+                        voice_time_spent: Date.now()
+                    }
+                }
+
+                console.log(`[voiceStateUpdate] @${username}(${userId}) перемістився до голосового чату.`)
+            }
+
+            // Користувач вийшов з ГЧ.
+            if (oldChannel && !newChannel) {
+                await config.update((config) => {
+                    const user = config.economy.users[userId]
+
+                    const voiceTimeSpent = (Date.now() - voiceChannelMembers[userId].voice_time_spent)
+                    const voiceTimeSpentMinutes = Math.floor(voiceTimeSpent / (1000 * 60))
+
+                    user.balance += Math.floor(voiceTimeSpentMinutes / 5)
+                    user.voice_time_spent += voiceTimeSpent
+
+                    delete voiceChannelMembers[userId]
+                })
+
+                console.log(`[voiceStateUpdate] @${username}(${userId}) вийшов з голосового чату.`)
+            }
+        })
+
+        /*const guild = (client.guilds.cache.get(process.env.GUILD_ID as string) as Guild)
 
         // Зараховуємо валюту за повідомлення.
         client.on('messageCreate', async (message) => {
@@ -236,7 +366,7 @@ export class EconomyCommand extends Command {
                     console.info(`@${message.author.id} видалив повідомлення! Він відсутній у БД.`)
                 }
             })
-        })
+        })*/
     }
 
     canAccept(interaction: ChatInputCommandInteraction): Promise<boolean> {
@@ -247,7 +377,7 @@ export class EconomyCommand extends Command {
         const embed = new EmbedBuilder()
             .setTitle('Економіка')
             .setDescription('Ви можете отримувати аксесуари у TF2 за активну участь у житті спільноти, отримуючи валюту "Бафи" <:soldier_thumbsup:1378127706750845071>')
-            .setColor('#4b73f5')
+            .setColor(this.DEFAULT_COLOR)
             .setTimestamp()
 
         await interaction.reply({
