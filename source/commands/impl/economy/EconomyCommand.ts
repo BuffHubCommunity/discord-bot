@@ -1,14 +1,12 @@
 import {Command} from '../../Command'
 import {
+    ChannelType,
     ChatInputCommandInteraction,
     Client,
     EmbedBuilder,
     Guild,
     GuildMember,
-    TextBasedChannel,
-    TextChannel,
-    User,
-    ChannelType
+    VoiceChannel
 } from 'discord.js'
 import {Config} from "../../../Config";
 import {Main} from "../../../Main";
@@ -26,19 +24,19 @@ export type EconomySchema = {
     }
 }
 
-export type VoiceChannelMembersSchema = {
-    [user_id: string]: VoiceChannelMemberSchema
+export type VoiceMemberSchema = {
+    voice_channel_id: string
+    joined_at: number
 }
-export type VoiceChannelMemberSchema = {
-    channel_id: string,
-    voice_time_spent: number
+export type RewardingVoiceMemberSchema = {
+    voice_channel_id: string
+    counting_since: number
 }
-
-export type VoiceDataSchema = {
-    [user_id: string]: {
-        channel_id: string
-        time_since_last_reward: number
-    }
+export type LeftVoiceMemberSchema = {
+    type: 'left-vc' | 'left-reward'
+    member: GuildMember,
+    voice_member: VoiceMemberSchema,
+    rewarding_voice_member: RewardingVoiceMemberSchema
 }
 
 export type AchievementSchema = {
@@ -67,9 +65,11 @@ export class EconomyCommand extends Command {
 
     async init(client: Client): Promise<void> {
         const guild = (client.guilds.cache.get(process.env.GUILD_ID as string) as Guild)
+        await guild.channels.fetch()
         await guild.members.fetch()
 
-        const voiceChannelMembers: VoiceChannelMembersSchema = {}
+        const voiceMembers: { [key: string]: VoiceMemberSchema } = {}
+        const rewardingVoiceMembers: { [key: string]: RewardingVoiceMemberSchema } = {}
 
         client.on('messageDelete', async (message) => {
             if (message.partial) return
@@ -118,22 +118,21 @@ export class EconomyCommand extends Command {
             })
         })
 
-        // Додаємо усіх наявних учасників у голосових чатах до списку.
-        for (let [userId, member] of guild.members.cache) {
-            const voiceChannel = member.voice.channel
-            if (!voiceChannel) continue
+        for (let [, channel] of guild.channels.cache) {
+            if (!(channel instanceof VoiceChannel)) continue
 
-            if (voiceChannel.members.size >= 2) {
-                voiceChannel.members.forEach((member) => {
-                    if (member.id in voiceChannelMembers) return
+            for (let [, member] of channel.members) {
+                voiceMembers[member.id] = {
+                    voice_channel_id: channel.id,
+                    joined_at: Date.now()
+                }
 
-                    voiceChannelMembers[member.id] = {
-                        channel_id: voiceChannel.id,
-                        voice_time_spent: Date.now()
+                if (channel.members.size >= 2) {
+                    rewardingVoiceMembers[member.id] = {
+                        voice_channel_id: channel.id,
+                        counting_since: Date.now()
                     }
-
-                    console.log(`-# @${member.user.tag} під'єднався до #${voiceChannel.name} (${voiceChannel.members.size}).`)
-                })
+                }
             }
         }
 
@@ -145,147 +144,164 @@ export class EconomyCommand extends Command {
 
             const config = await Config.getLowConfig()
 
-            const userId = newState.id
             const mainMember = (newState.member as GuildMember)
+            const eureka = await guild.members.fetch('527550244913676292')
 
-            // Користувач під'єднався до ГЧ.
+            const leftVoiceMembers: LeftVoiceMemberSchema[] = []
+
             if (!oldChannel && newChannel) {
-                // Рахуємо монети лише від двух учасників.
-                switch (newChannel.members.size) {
-                    case 1: {
-                        // Учасник самотній у голосовому чаті, не рахуємо монети.
-                        console.log(`-# @${mainMember.user.tag} під'єднався до #${newChannel.name} (${newChannel.members.size}).`)
-                        break
+                const voiceChannel = newChannel
+
+                voiceMembers[mainMember.id] = {
+                    voice_channel_id: voiceChannel.id,
+                    joined_at: Date.now()
+                }
+
+                if (voiceChannel.members.size >= 2) {
+                    // Поточний учасник.
+                    rewardingVoiceMembers[mainMember.id] = {
+                        voice_channel_id: voiceChannel.id,
+                        counting_since: Date.now()
                     }
 
-                    case 2: {
-                        // Кількість учасників у голосовому чаті 2, тепер рахуємо монети обом.
-                        console.log(`-# #${newChannel.name}: починаємо рахувати монети для двох учасників (${newChannel.members.map((member) => member.user.tag).join(', ')}).`)
+                    // Інші учасники.
+                    for (let [, member] of voiceChannel.members) {
+                        if (member === mainMember) continue //
 
-                        for (let [userId, member] of newChannel.members) {
-                            voiceChannelMembers[userId] = {
-                                channel_id: newChannel.id,
-                                voice_time_spent: Date.now()
-                            }
+                        if (member.id in rewardingVoiceMembers) continue // Вже рахується.
+
+                        rewardingVoiceMembers[member.id] = {
+                            voice_channel_id: voiceChannel.id,
+                            counting_since: Date.now()
                         }
-                        break
-                    }
-
-                    default: {
-                        // Учасник під'єднався до групи з 2+ учасників, у яких вже рахуються монети, тому починаємо рахувати лише йому.
-                        console.log(`-# #${newChannel.name}: починаємо рахувати монети новому учаснику (${mainMember.user.tag}).`)
-
-                        voiceChannelMembers[userId] = {
-                            channel_id: newChannel.id,
-                            voice_time_spent: Date.now()
-                        }
-                        break
                     }
                 }
             }
 
-            // Користувач вийшов з ГЧ.
             if (oldChannel && !newChannel) {
-                const emptyVoiceChannelParticipants: GuildMember[] = [mainMember]
+                leftVoiceMembers.push({
+                    type: 'left-vc',
+                    member: mainMember,
+                    voice_member: voiceMembers[mainMember.id],
+                    rewarding_voice_member: rewardingVoiceMembers[mainMember.id]
+                })
+
+                delete voiceMembers[mainMember.id]
+                delete rewardingVoiceMembers[mainMember.id]
 
                 if (oldChannel.members.size <= 1) {
-                    oldChannel.members.forEach((member) => emptyVoiceChannelParticipants.push(member))
+                    oldChannel.members.forEach((member) => {
+                        leftVoiceMembers.push({
+                            type: 'left-reward',
+                            member: member,
+                            voice_member: voiceMembers[member.id],
+                            rewarding_voice_member: rewardingVoiceMembers[member.id]
+                        })
+
+                        delete rewardingVoiceMembers[member.id]
+                    })
                 }
-
-                await config.update((config) => {
-                    for (let member of emptyVoiceChannelParticipants) {
-                        const user = config.economy.users[member.id]
-
-                        const voiceUser = voiceChannelMembers[member.id]
-                        if (!voiceUser) continue
-
-                        const voiceTimeSpent = (Date.now() - voiceUser.voice_time_spent)
-                        const voiceTimeSpentMinutes = Math.floor(voiceTimeSpent / (1000 * 60))
-                        const voiceReward = Math.floor(voiceTimeSpentMinutes / 5)
-
-                        user.balance += voiceReward
-                        user.voice_time_spent += voiceTimeSpent
-
-                        delete voiceChannelMembers[member.id]
-
-                        if (mainMember === member) {
-                            console.log(`-# @${member.user.tag} від'єднався від #${oldChannel.name} (${oldChannel.members.size}). Заробив +${voiceReward}`)
-                        } else {
-                            console.log(`-# @${member.user.tag} все ще у голосовому каналі #${oldChannel.name} (${oldChannel.members.size}), але учасників для зарахування монет недостатньо. Заробив +${voiceReward}`)
-                        }
-                    }
-                })
             }
 
-            // Користувач перемістився у інший ГЧ.
             if (oldChannel && newChannel && (oldChannel !== newChannel)) {
-                console.log(`-# @${mainMember.user.tag} перемістився з #${oldChannel.name} (${oldChannel.members.size}) до #${newChannel.name} (${newChannel.members.size}).`)
+                const voiceChannel = newChannel
 
-                const emptyVoiceChannelParticipants: GuildMember[] = []
+                voiceMembers[mainMember.id].voice_channel_id = voiceChannel.id
 
-                // Попередній ГЧ.
-                if (oldChannel.members.size <= 1) {
-                    oldChannel.members.forEach((member) => emptyVoiceChannelParticipants.push(member))
-                }
-
-                // Новий ГЧ.
-                switch (newChannel.members.size) {
-                    case 1: {
-                        // Чат, у якому є лише переміщений учасник.
-                        // Більше не рахуємо йому монети.
-                        newChannel.members.forEach((member) => emptyVoiceChannelParticipants.push(member))
-                        break
-                    }
-
-                    case 2: {
-                        // Чат, у якому тепер є мінімум учасників для зарахування монет.
-                        newChannel.members.forEach((member) => {
-                            if ((mainMember === member) && (member.id in voiceChannelMembers)) {
-                                // Змінюємо канал, якщо під'єднаний учасник був у попередньому каналі.
-                                voiceChannelMembers[member.id].channel_id = newChannel.id
-                            } else {
-                                // Інакше додаємо до списку.
-                                voiceChannelMembers[member.id] = {
-                                    channel_id: newChannel.id,
-                                    voice_time_spent: Date.now()
-                                }
-                            }
-                        })
-                        break
-                    }
-
-                    default: {
-                        // Чат, у якому вже сидить більше осіб, ніж потрібно для мінімальної нагороди.
-                        // Додаємо до списку лише під'єднаного учасника.
-                        if (mainMember.id in voiceChannelMembers) {
-                            voiceChannelMembers[mainMember.id].channel_id = newChannel.id
-                        } else {
-                            voiceChannelMembers[mainMember.id] = {
-                                channel_id: newChannel.id,
-                                voice_time_spent: Date.now()
-                            }
+                // Основний учасник.
+                if (voiceChannel.members.size >= 2) {
+                    if (mainMember.id in rewardingVoiceMembers) {
+                        rewardingVoiceMembers[mainMember.id].voice_channel_id = voiceChannel.id
+                    } else {
+                        rewardingVoiceMembers[mainMember.id] = {
+                            voice_channel_id: voiceChannel.id,
+                            counting_since: Date.now()
                         }
-                        break
                     }
+                } else {
+                    leftVoiceMembers.push({
+                        type: 'left-reward',
+                        member: mainMember,
+                        voice_member: voiceMembers[mainMember.id],
+                        rewarding_voice_member: rewardingVoiceMembers[mainMember.id]
+                    })
+
+                    delete rewardingVoiceMembers[mainMember.id]
                 }
 
+                // Інші учасники (Старий Чат)
+                if (oldChannel.members.size <= 1) {
+                    oldChannel.members.forEach((member) => {
+                        leftVoiceMembers.push({
+                            type: 'left-reward',
+                            member: member,
+                            voice_member: voiceMembers[member.id],
+                            rewarding_voice_member: rewardingVoiceMembers[member.id]
+                        })
+
+                        delete rewardingVoiceMembers[member.id]
+                    })
+                }
+
+                // Інші учасники (Новий Чат)
+                if (voiceChannel.members.size >= 2) {
+                    for (let [, member] of voiceChannel.members) {
+                        if (member === mainMember) continue //
+
+                        if (member.id in rewardingVoiceMembers) continue // Вже рахується.
+
+                        rewardingVoiceMembers[member.id] = {
+                            voice_channel_id: voiceChannel.id,
+                            counting_since: Date.now()
+                        }
+                    }
+                }
+            }
+
+            const contentArray: { [key: string]: string[] } = {}
+
+            for (let userId in voiceMembers) {
+                const voiceMember = voiceMembers[userId]
+                const member = guild.members.cache.get(userId) as GuildMember
+
+                if (voiceMember.voice_channel_id in contentArray) {
+                    contentArray[voiceMember.voice_channel_id].push(member.user.tag + ' ' + (member.id in rewardingVoiceMembers))
+                } else {
+                    const voiceChannel = guild.channels.cache.get(voiceMember.voice_channel_id) as VoiceChannel
+
+                    contentArray[voiceMember.voice_channel_id] = [
+                        `**#${voiceChannel.name}**`,
+                        member.user.tag + ' ' + (member.id in rewardingVoiceMembers)
+                    ]
+                }
+            }
+
+            // await eureka.send('> Оновлення\n' + Object.values(contentArray).map((ca) => ca.join('\n')).join('\n'))
+
+            if (leftVoiceMembers.length >= 1) {
                 await config.update((config) => {
-                    for (let member of emptyVoiceChannelParticipants) {
-                        const user = config.economy.users[member.id]
+                    for (let leftVoiceMember of leftVoiceMembers) {
+                        const userEconomy = config.economy.users[leftVoiceMember.member.id]
 
-                        const voiceUser = voiceChannelMembers[member.id]
-                        if (!voiceUser) continue
+                        const voiceTimeSpent = (Date.now() - leftVoiceMember.voice_member.joined_at)
 
-                        const voiceTimeSpent = (Date.now() - voiceUser.voice_time_spent)
-                        const voiceTimeSpentMinutes = Math.floor(voiceTimeSpent / (1000 * 60))
-                        const voiceReward = Math.floor(voiceTimeSpentMinutes / 5)
+                        userEconomy.voice_time_spent += voiceTimeSpent
 
-                        user.balance += voiceReward
-                        user.voice_time_spent += voiceTimeSpent
+                        if (leftVoiceMember.rewarding_voice_member) {
+                            const rewardingVoiceTimeSpent = (Date.now() - leftVoiceMember.rewarding_voice_member.counting_since)
+                            const rewardingVoiceTimeSpentMinutes = Math.floor(rewardingVoiceTimeSpent / (1000 * 60))
+                            const voiceReward = Math.floor(rewardingVoiceTimeSpentMinutes / 5)
 
-                        delete voiceChannelMembers[member.id]
+                            userEconomy.balance += voiceReward
+                        }
 
-                        console.log(`-# @${member.user.tag} все ще у голосовому каналі #${newChannel.name} (${newChannel.members.size}), але учасників для зарахування монет недостатньо. Заробив +${voiceReward}`)
+                        if (leftVoiceMember.type === 'left-reward') {
+                            // Оновлюємо дату приєднання, так як ми оновили його інформацію у БД.
+                            voiceMembers[leftVoiceMember.member.id].joined_at = Date.now()
+                        } else {
+                            // leftVoiceMember.type === 'left-vc'
+                            // Учасник остаточно вийшов з ГЧ, інформації у 'voiceMembers' про нього нема.
+                        }
                     }
                 })
             }

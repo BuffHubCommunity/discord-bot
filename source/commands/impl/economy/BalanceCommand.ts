@@ -1,6 +1,7 @@
 import {Command} from '../../Command'
 import {ChatInputCommandInteraction, Client, EmbedBuilder, GuildMember} from 'discord.js'
 import {Config} from "../../../Config";
+import {Main} from "../../../Main";
 
 export class BalanceCommand extends Command {
     readonly name = 'баланс'
@@ -39,7 +40,7 @@ export class BalanceCommand extends Command {
                             name: 'Час у ГЧ',
                             value: [
                                 '```ansi',
-                                `⌚ ${this.millisToTime(userEconomy.voice_time_spent)}`,
+                                `⌚ ${Main.millisToTime(userEconomy.voice_time_spent)}`,
                                 '```'
                             ].join('\n'),
                             inline: true
@@ -75,15 +76,5 @@ export class BalanceCommand extends Command {
 
     reject(interaction: ChatInputCommandInteraction): Promise<void> {
         return Promise.resolve(undefined)
-    }
-
-    millisToTime(millis: number): string {
-        const totalSeconds = Math.floor(millis / 1000)
-
-        const hours = Math.floor(totalSeconds / 3600)
-        const minutes = Math.floor((totalSeconds % 3600) / 60);
-        const seconds = totalSeconds % 60
-
-        return `${hours}г ${minutes}хв ${seconds}с`
     }
 }

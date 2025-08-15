@@ -1,7 +1,8 @@
 import {Command} from '../../Command'
-import {ChatInputCommandInteraction, Client, EmbedBuilder, Guild, GuildMember, User} from 'discord.js'
+import {ChatInputCommandInteraction, Client, EmbedBuilder, Guild, GuildMember, time, User} from 'discord.js'
 import {Config} from "../../../Config";
 import {UserEconomySchema} from "./EconomyCommand";
+import {Main} from "../../../Main";
 
 export class LeaderboardsCommand extends Command {
     readonly name = 'таблиця-лідерів'
@@ -36,21 +37,26 @@ export class LeaderboardsCommand extends Command {
             .filter((entry): entry is [/* userId: */ string, /* userEconomy */ UserEconomySchema] => !!entry) // Прибираємо усіх undefined користувачів.
             .sort(([, userEconomy1], [, userEconomy2]) => userEconomy2.balance - userEconomy1.balance)
 
+        const top10 = sortedEntries.slice(0, 10)
+
         const yourIndex: number = sortedEntries.findIndex(([userId, userEconomy]) => userId === interaction.user.id)
         const yourPlace: string = yourIndex === -1 ? '?' : String(yourIndex + 1)
 
-        const maxUsernameLength = Math.max(...sortedEntries.slice(0, 10).map(([username]) => username.length))
+        const maxUsernameLength = Math.max(...top10.map(([username]) => username.length))
+        const maxCoinLength = Math.max(...top10.map(([username, userEconomy]) => String(userEconomy.balance).length))
         const contentArray = []
 
         for (const [userId, userEconomy] of sortedEntries) {
-            const user = (guild.members.cache.get(userId) as GuildMember).user
-            const username = (user.username || user.globalName || (`[?] ${user.id}`))
+            const member = (guild.members.cache.get(userId) as GuildMember)
 
             const index = (contentArray.length + 1)
             const place: string = `${index < 10 ? ' ' : ''}${index}) `
 
-            const padding = username.padEnd(maxUsernameLength, ' ')
-            contentArray.push(`${place}${padding}\t${userEconomy.balance}`)
+            const username = member.user.tag.padEnd(maxUsernameLength + 3)
+            const coins = String(userEconomy.balance).padEnd(maxCoinLength + 3)
+            const timeSpent = Main.millisToTime(userEconomy.voice_time_spent)
+
+            contentArray.push(`${place}${username}${coins}${timeSpent}`)
 
             if (contentArray.length >= 10) break
         }
@@ -72,6 +78,8 @@ export class LeaderboardsCommand extends Command {
                     .setFooter({text: `Ви знаходитесь на ${yourPlace} місці.`})
             ]
         })
+
+
     }
 
     reject(interaction: ChatInputCommandInteraction): Promise<void> {
