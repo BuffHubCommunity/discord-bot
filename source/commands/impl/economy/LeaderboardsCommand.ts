@@ -43,7 +43,9 @@ export class LeaderboardsCommand extends Command {
         const yourPlace: string = yourIndex === -1 ? '?' : String(yourIndex + 1)
 
         const maxUsernameLength = Math.max(...top10.map(([username]) => username.length))
-        const maxCoinLength = Math.max(...top10.map(([username, userEconomy]) => String(userEconomy.balance).length))
+        const maxCoinLength = Math.max(...top10.map(([, userEconomy]) => String(userEconomy.balance).length))
+        const maxTimeLength = Math.max(...top10.map(([, userEconomy]) => Main.millisToTime(userEconomy.voice_time_spent).length))
+
         const contentArray = []
 
         for (const [userId, userEconomy] of sortedEntries) {
@@ -54,7 +56,7 @@ export class LeaderboardsCommand extends Command {
 
             const username = member.user.tag.padEnd(maxUsernameLength + 3)
             const coins = String(userEconomy.balance).padEnd(maxCoinLength + 3)
-            const timeSpent = Main.millisToTime(userEconomy.voice_time_spent)
+            const timeSpent = Main.millisToTime(userEconomy.voice_time_spent).padStart(maxTimeLength)
 
             contentArray.push(`${place}${username}${coins}${timeSpent}`)
 

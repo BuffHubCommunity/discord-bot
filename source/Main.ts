@@ -99,10 +99,16 @@ function millisToTime(millis: number): string {
     const totalSeconds = Math.floor(millis / 1000)
 
     const hours = Math.floor(totalSeconds / 3600)
-    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const minutes = Math.floor((totalSeconds % 3600) / 60)
     const seconds = totalSeconds % 60
 
-    return `${(hours < 10 ? '0' : '') + hours}:${(minutes < 10 ? '0' : '') + minutes}:${(seconds < 10 ? '0' : '') + seconds}`
+    const timeArray = []
+
+    if (hours > 0) timeArray.push(`${hours}г`)
+    if (minutes > 0) timeArray.push(`${minutes}хв`)
+    if (seconds > 0) timeArray.push(`${seconds}с`)
+
+    return timeArray.join(' ')
 }
 
 export const Main = {
