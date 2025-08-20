@@ -44,7 +44,7 @@ export class LeaderboardsCommand extends Command {
 
         const maxUsernameLength = Math.max(...top10.map(([username]) => username.length))
         const maxCoinLength = Math.max(...top10.map(([, userEconomy]) => String(userEconomy.balance).length))
-        const maxTimeLength = Math.max(...top10.map(([, userEconomy]) => Main.millisToTime(userEconomy.voice_time_spent).length))
+        // const maxTimeLength = Math.max(...top10.map(([, userEconomy]) => Main.millisToTime(userEconomy.voice_time_spent).length))
 
         const contentArray = []
 
@@ -55,10 +55,10 @@ export class LeaderboardsCommand extends Command {
             const place: string = `${index < 10 ? ' ' : ''}${index}) `
 
             const username = member.user.tag.padEnd(maxUsernameLength + 3)
-            const coins = String(userEconomy.balance).padEnd(maxCoinLength + 3)
-            const timeSpent = Main.millisToTime(userEconomy.voice_time_spent).padStart(maxTimeLength)
+            const coins = String(userEconomy.balance) //.padEnd(maxCoinLength + 3)
+            // const timeSpent = Main.millisToTime(userEconomy.voice_time_spent).padStart(maxTimeLength)
 
-            contentArray.push(`${place}${username}${coins}${timeSpent}`)
+            contentArray.push(`${place}${username}${coins}`)
 
             if (contentArray.length >= 10) break
         }

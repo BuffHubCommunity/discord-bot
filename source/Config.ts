@@ -3,13 +3,15 @@ import {JSONFilePreset} from "lowdb/node";
 import {Low} from "lowdb";
 import {VerifierSchema} from "./commands/impl/SetupVerifierCommand";
 import {EconomySchema} from "./commands/impl/economy/EconomyCommand";
+import {PushTheCartScheme} from "./commands/impl/PushTheCartCommand";
 
 export type ConfigSchema = {
     'commands': {
         'налаштувати-вартового': VerifierSchema,
         'налаштувати-привітання': GreetVerifiedUserSchema,
     },
-    'economy': EconomySchema
+    'economy': EconomySchema,
+    'push_the_cart': PushTheCartScheme
 }
 
 async function getLowConfig() {
@@ -17,7 +19,8 @@ async function getLowConfig() {
         'commands': {},
         'economy': {
             'users': {}
-        }
+        },
+        'push_the_cart': {}
     }) as unknown as Low<ConfigSchema>)
 }
 

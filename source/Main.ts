@@ -15,6 +15,7 @@ import {LeaderboardsCommand} from "./commands/impl/economy/LeaderboardsCommand";
 import {VerifySteamProfileCommand} from "./commands/impl/VerifySteamProfileCommand";
 import {Config} from "./Config";
 import {CasinoCommand} from "./commands/impl/economy/CasinoCommand";
+import {PushTheCartCommand} from "./commands/impl/PushTheCartCommand";
 
 (async () => {
     const client = new Client({
@@ -38,7 +39,8 @@ import {CasinoCommand} from "./commands/impl/economy/CasinoCommand";
 
         new EconomyCommand(),
         new BalanceCommand(),
-        new LeaderboardsCommand()
+        new LeaderboardsCommand(),
+        new PushTheCartCommand()
         //new CasinoCommand()
     ]
 
