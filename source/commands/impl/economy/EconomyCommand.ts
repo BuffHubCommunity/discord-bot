@@ -5,13 +5,13 @@ import {
     Client,
     EmbedBuilder,
     Guild,
-    GuildMember,
-    VoiceChannel
+    GuildMember, Message,
+    VoiceChannel, VoiceState
 } from 'discord.js'
 import {Config} from "../../../Config";
 import {Main} from "../../../Main";
 
-export type UserEconomySchema = {
+export type UserEconomy = {
     balance: number,
     messages_sent: number,
     voice_time_spent: number,
@@ -20,7 +20,7 @@ export type UserEconomySchema = {
 }
 export type EconomySchema = {
     users: {
-        [key: string]: UserEconomySchema
+        [key: string]: UserEconomy
     }
 }
 
@@ -43,7 +43,7 @@ export type AchievementSchema = {
     id: string,
     name: string,
     reward: number,
-    condition: (user: UserEconomySchema) => Promise<boolean>
+    condition: (user: UserEconomy) => Promise<boolean>
 }
 
 const achievements: AchievementSchema[] = [
@@ -71,50 +71,43 @@ export class EconomyCommand extends Command {
         const voiceMembers: { [key: string]: VoiceMemberSchema } = {}
         const rewardingVoiceMembers: { [key: string]: RewardingVoiceMemberSchema } = {}
 
-        client.on('messageDelete', async (message) => {
+        client.on('messageDeleteSafe', async (message: Message) => {
             if (message.partial) return
-
-            await Main.verifyUserIntegrity(message.author.id)
-
-            const config = await Config.getLowConfig()
 
             const username = (message.author.globalName || message.author.username)
             const userId = message.author.id
 
-            await config.update((config) => {
+            await Config.asyncUpdate(async (config) => {
                 const user = config.economy.users[userId]
-
                 user.balance -= 2
 
                 console.log(`[messageDelete] @${username}(${userId}) видалив повідомлення. -2`)
+                return true
             })
         })
 
-        client.on('messageCreate', async (message) => {
-            await Main.verifyUserIntegrity(message.author.id)
-
+        client.on('messageCreateSafe', async (message: Message) => {
             if (message.author?.bot) return
             if (message.content?.length < 10) return
             if (message.channel.type !== ChannelType.GuildText) return
 
-            const config = await Config.getLowConfig()
-
             const username = (message.author.globalName || message.author.username)
             const userId = message.author.id
-            const user: UserEconomySchema = config.data.economy.users[userId]
 
             // TODO: бонуси
 
             // TODO: ачівки
 
             // Зараховуємо монету за повідомлення.
-            await config.update((config) => {
+            await Config.asyncUpdate(async (config) => {
                 const user = config.economy.users[userId]
 
                 user.balance += 1
                 user.messages_sent += 1
 
                 console.log(`[messageCreate] @${username}(${userId}) надіслав повідомлення. +1`)
+
+                return true
             })
         })
 
@@ -136,16 +129,11 @@ export class EconomyCommand extends Command {
             }
         }
 
-        client.on('voiceStateUpdate', async (oldState, newState) => {
-            await Main.verifyUserIntegrity(newState.id)
-
+        client.on('voiceStateUpdateSafe', async (oldState: VoiceState, newState: VoiceState) => {
             const oldChannel = oldState.channel
             const newChannel = newState.channel
 
-            const config = await Config.getLowConfig()
-
             const mainMember = (newState.member as GuildMember)
-            const eureka = await guild.members.fetch('527550244913676292')
 
             const leftVoiceMembers: LeftVoiceMemberSchema[] = []
 
@@ -279,7 +267,7 @@ export class EconomyCommand extends Command {
             // await eureka.send('> Оновлення\n' + Object.values(contentArray).map((ca) => ca.join('\n')).join('\n'))
 
             if (leftVoiceMembers.length >= 1) {
-                await config.update((config) => {
+                await Config.asyncUpdate(async (config) => {
                     for (let leftVoiceMember of leftVoiceMembers) {
                         const userEconomy = config.economy.users[leftVoiceMember.member.id]
 
@@ -303,6 +291,8 @@ export class EconomyCommand extends Command {
                             // Учасник остаточно вийшов з ГЧ, інформації у 'voiceMembers' про нього нема.
                         }
                     }
+
+                    return true
                 })
             }
         })

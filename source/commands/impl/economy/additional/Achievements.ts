@@ -1,11 +1,11 @@
-import {UserEconomySchema} from '../EconomyCommand'
+import {UserEconomy} from '../EconomyCommand'
 import {ClientEvents} from 'discord.js'
 
 export type Achievement = {
     id: string,
     name: string,
     reward: number,
-    condition: (user: UserEconomySchema) => Promise<boolean>,
+    condition: (user: UserEconomy) => Promise<boolean>,
     event: ClientEvents
 }
 

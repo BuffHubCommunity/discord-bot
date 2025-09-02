@@ -1,7 +1,7 @@
 import {Command} from '../../Command'
 import {ChatInputCommandInteraction, Client, EmbedBuilder, Guild, GuildMember, time, User} from 'discord.js'
 import {Config} from "../../../Config";
-import {UserEconomySchema} from "./EconomyCommand";
+import {UserEconomy} from "./EconomyCommand";
 import {Main} from "../../../Main";
 
 export class LeaderboardsCommand extends Command {
@@ -18,23 +18,19 @@ export class LeaderboardsCommand extends Command {
         await interaction.deferReply()
 
         const guild = (interaction.guild as Guild) // Ніколи не undefined, перевіряємо у Main.ts.
-
         const config = await Config.getConfig()
-        const users = config['economy']['users']
 
         // Замінюємо користувачів з undefined, які не у спільноті.
         const validUsers = await Promise.all(
-            Object.entries(users)
+            Object.entries(config.economy.users)
                 .map(async ([id, balance]) => {
                     const user = await this.getUser(guild, id)
                     return user ? [id, balance] : null
                 })
         )
 
-        //
-
         const sortedEntries = validUsers
-            .filter((entry): entry is [/* userId: */ string, /* userEconomy */ UserEconomySchema] => !!entry) // Прибираємо усіх undefined користувачів.
+            .filter((entry): entry is [/* userId: */ string, /* userEconomy */ UserEconomy] => !!entry) // Прибираємо усіх undefined користувачів.
             .sort(([, userEconomy1], [, userEconomy2]) => userEconomy2.balance - userEconomy1.balance)
 
         const top10 = sortedEntries.slice(0, 10)
@@ -43,7 +39,7 @@ export class LeaderboardsCommand extends Command {
         const yourPlace: string = yourIndex === -1 ? '?' : String(yourIndex + 1)
 
         const maxUsernameLength = Math.max(...top10.map(([username]) => username.length))
-        const maxCoinLength = Math.max(...top10.map(([, userEconomy]) => String(userEconomy.balance).length))
+        // const maxCoinLength = Math.max(...top10.map(([, userEconomy]) => String(userEconomy.balance).length))
         // const maxTimeLength = Math.max(...top10.map(([, userEconomy]) => Main.millisToTime(userEconomy.voice_time_spent).length))
 
         const contentArray = []

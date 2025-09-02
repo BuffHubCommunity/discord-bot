@@ -4,6 +4,9 @@ import {Config} from "../../../Config";
 
 export class CasinoCommand extends Command {
     readonly name = 'казино'
+    readonly emojis = ['🍒', '🫐', '🍋', '7️⃣']
+
+    readonly currentPlayers: Set<string> = new Set<string>()
 
     init(client: Client): void {
     }
@@ -13,40 +16,89 @@ export class CasinoCommand extends Command {
     }
 
     async accept(interaction: ChatInputCommandInteraction): Promise<void> {
-        await interaction.deferReply()
-        const user = (interaction.member as GuildMember).user
+        const guildMember = (interaction.member as GuildMember)
 
-        const config = await Config.getConfig()
-        const userId = user.id
+        if (this.currentPlayers.has(guildMember.id)) {
+            await interaction.deferReply({ephemeral: true})
+            await this.simpleReject(interaction, '🎰 Слот Машина', 'Ви вже приймаєте участь у казино.')
+        } else {
+            this.currentPlayers.add(guildMember.id)
+            await interaction.deferReply()
 
-        const deposit = interaction.options.getNumber('ставка') as number
+            const deposit = Math.floor(interaction.options.getNumber('ставка') || 0)
 
-        const userEconomy = config.economy.users[userId]
+            if (deposit < 50) {
+                this.currentPlayers.delete(guildMember.id)
+                await this.simpleReject(interaction, '🎰 Слот Машина', 'Ставка не може бути менше ніж 50.')
+            } else {
+                const config = await Config.getConfig()
 
-        for (let i = 0; i < 5; i++) {
-            const char = (i % 2 === 1) ? '❓' : '❔'
+                const memberEconomy = config.economy.users[guildMember.user.id]
 
-            await editReply(deposit, char, char, char)
-            await sleep(300)
+                if (memberEconomy.balance >= deposit) {
+                    // Крутимо одразу щоб уникнути проблем з абузом системи, анімуємо пізніше.
+                    const slots: string[] = []
+
+                    for (let i = 0; i < 3; i++) {
+                        const emoji = this.emojis[Math.floor(Math.random() * this.emojis.length)]
+                        slots.push(emoji)
+                    }
+
+                    const multiplier = getSlotMultiplier(slots)
+
+                    await Config.asyncUpdate(async (config) => {
+                        const memberEconomy = config.economy.users[guildMember.user.id]
+
+                        memberEconomy.balance -= deposit
+                        memberEconomy.balance += Math.floor((deposit * multiplier) - deposit)
+
+                        return true
+                    })
+
+                    // Анімуємо.
+                    await editReply(deposit, '❔', '❔', '❔')
+
+                    await new Promise((resolve) => setTimeout(resolve, 2_000))
+
+                    for (let i = 0; i < slots.length; i++) {
+                        await new Promise((resolve) => setTimeout(resolve, 1_500))
+
+                        await editReply(deposit,
+                            i >= 0 ? slots[0] : '❔',
+                            i >= 1 ? slots[1] : '❔',
+                            i >= 2 ? slots[2] : '❔'
+                        )
+                    }
+
+                    await new Promise((resolve) => setTimeout(resolve, 1_500))
+
+                    if (multiplier === 1) {
+                        await editReply(deposit,
+                            slots[0] || '❔',
+                            slots[1] || '❔',
+                            slots[2] || '❔',
+                            `Ви програли ${deposit} монет.`
+                        )
+                    } else {
+                        const win = Math.floor((deposit * multiplier) - deposit)
+
+                        await editReply(deposit,
+                            slots[0] || '❔',
+                            slots[1] || '❔',
+                            slots[2] || '❔',
+                            (deposit === win ? 'Ви нічого не програли' : `Ви виграли ${win} монет.`)
+                        )
+                    }
+
+                    this.currentPlayers.delete(guildMember.id)
+                } else {
+                    this.currentPlayers.delete(guildMember.id)
+                    await this.simpleReject(interaction, '🎰 Слот Машина', 'У Вас недостатньо монет для депозиту.')
+                }
+            }
         }
 
-        const emojis = ['🍒', '🫐', '🍋', '7️⃣']
-        const slots = []
-
-        for (let i = 0; i < 3; i++) {
-            await sleep(1500)
-
-            const emoji = emojis[Math.floor(Math.random() * emojis.length)]
-            slots.push(emoji)
-
-            await editReply(deposit,
-                slots[0] || '❔',
-                slots[1] || '❔',
-                slots[2] || '❔'
-            )
-        }
-
-        async function editReply(deposit: number, slot1: string, slot2: string, slot3: string) {
+        async function editReply(deposit: number, slot1: string, slot2: string, slot3: string, footer?: string) {
             await interaction.editReply({
                 embeds: [
                     new EmbedBuilder()
@@ -73,16 +125,42 @@ export class CasinoCommand extends Command {
                                 inline: true
                             },
                         )
-                        .setFooter({text: 'Не зараховує монетки :3'})
+                        .setFooter({text: footer || ' '})
                         .setColor('#4b73f5')
                 ]
             })
         }
 
-        async function sleep(millis: number) {
-            return new Promise((resolve) => {
-                setTimeout(resolve, millis)
-            })
+        function getSlotMultiplier(slots: String[]): number {
+            const [a, b, c] = slots
+
+            let emoji
+
+            // 3
+            if (a === b && b === c) emoji = a
+
+            switch (emoji) {
+                case '7️⃣': return 15
+                case '🍒': return 10
+                case '🫐': return 7.5
+                case '🍋': return 5
+            }
+
+            // 2
+            if (a === b) emoji = a
+            if (b === c) emoji = b
+            if (c === a) emoji = c
+
+            if (emoji) {
+                switch (emoji) {
+                    case '7️⃣': return 5
+                    case '🍒': return 3
+                    case '🫐': return 2
+                    case '🍋': return 1.5
+                }
+            }
+
+            return 1
         }
 
         /*await interaction.deferReply({ephemeral: true})

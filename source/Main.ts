@@ -2,14 +2,21 @@ import {
     Client,
     GatewayIntentBits,
     Partials,
-    ChatInputCommandInteraction, Interaction, CacheType, GuildMember, EmbedBuilder, TextChannel
+    ChatInputCommandInteraction,
+    Interaction,
+    CacheType,
+    GuildMember,
+    EmbedBuilder,
+    TextChannel,
+    Message,
+    OmitPartialGroupDMChannel, PartialGroupDMChannel, ChannelType
 } from 'discord.js'
 import {
     GreetVerifiedUserCommand
 } from './commands/impl/GreetVerifiedUserCommand'
 import {TemplateCommand} from "./commands/impl/TemplateCommand";
 import {SetupVerifierCommand} from "./commands/impl/SetupVerifierCommand";
-import {EconomyCommand, UserEconomySchema} from "./commands/impl/economy/EconomyCommand";
+import {EconomyCommand, UserEconomy} from "./commands/impl/economy/EconomyCommand";
 import {BalanceCommand} from "./commands/impl/economy/BalanceCommand";
 import {LeaderboardsCommand} from "./commands/impl/economy/LeaderboardsCommand";
 import {VerifySteamProfileCommand} from "./commands/impl/VerifySteamProfileCommand";
@@ -40,16 +47,23 @@ import {PushTheCartCommand} from "./commands/impl/PushTheCartCommand";
         new EconomyCommand(),
         new BalanceCommand(),
         new LeaderboardsCommand(),
-        new PushTheCartCommand()
-        //new CasinoCommand()
+        new PushTheCartCommand(),
+        // new CasinoCommand()
     ]
 
-    client.on('interactionCreate', async (interaction: Interaction<CacheType>) => {
+    client.on('ready', () => {
+        console.log('Бот запущений.')
+    })
+
+    overrideDiscordEvents(client)
+
+    // Команди.
+    client.on('interactionCreateSafe', async (interaction: Interaction<CacheType>) => {
         if (!interaction.guild) return
         if (!(interaction instanceof ChatInputCommandInteraction)) return
 
         for (let command of commands) {
-            if (command.isNeededCommand(interaction)) {
+            if (command.userWantsToExecuteThisCommand(interaction)) {
                 const canAccept = await command.canAccept(interaction)
 
                 if (canAccept) {
@@ -59,10 +73,6 @@ import {PushTheCartCommand} from "./commands/impl/PushTheCartCommand";
                 }
             }
         }
-    })
-
-    client.on('ready', () => {
-        console.log('Бот запущений.')
     })
 
     await client.login(process.env.BOT_TOKEN)
@@ -83,7 +93,7 @@ import {PushTheCartCommand} from "./commands/impl/PushTheCartCommand";
 async function verifyUserIntegrity(userId: string) {
     const config = await Config.getLowConfig()
 
-    const user: UserEconomySchema = config.data.economy.users[userId]
+    const user: UserEconomy = config.data.economy.users[userId]
 
     if (!user) {
         await config.update((config) => {
@@ -95,6 +105,44 @@ async function verifyUserIntegrity(userId: string) {
             }
         })
     }
+}
+
+function overrideDiscordEvents(client: Client) {
+    client.on('messageCreate', async (message) => {
+        await Config.ensureUserExists(message.author.id)
+
+        client.emit('messageCreateSafe', message)
+    })
+
+    client.on('messageDelete', async (message) => {
+        if (message.partial) {
+            // Відсутня більшість інформації про повідомлення.
+        } else {
+            await Config.ensureUserExists(message.author.id)
+        }
+
+        client.emit('messageDeleteSafe', message)
+    })
+
+    client.on('guildMemberUpdate', async (oldMember, newMember) => {
+        await Config.ensureUserExists(newMember.id)
+
+        client.emit('guildMemberUpdateSafe', oldMember, newMember)
+    })
+
+    client.on('voiceStateUpdate', async (oldState, newState) => {
+        await Config.ensureUserExists(newState.id)
+
+        client.emit('voiceStateUpdateSafe', oldState, newState)
+    })
+
+    client.on('interactionCreate', async (interaction: Interaction<CacheType>) => {
+        if (!interaction.member) return
+
+        await Config.ensureUserExists(interaction.member.user.id)
+
+        client.emit('interactionCreateSafe', interaction)
+    })
 }
 
 function millisToTime(millis: number): string {

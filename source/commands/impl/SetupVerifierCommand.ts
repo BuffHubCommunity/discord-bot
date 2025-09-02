@@ -2,10 +2,8 @@ import {Config} from '../../Config'
 import {Command} from '../Command'
 import {ChatInputCommandInteraction, Client, EmbedBuilder} from 'discord.js'
 
-export type VerifierSchema = {
-    role: {
-        id: string
-    }
+export type SetupVerifier = {
+    role_id: string
 }
 
 export class SetupVerifierCommand extends Command {
@@ -18,27 +16,26 @@ export class SetupVerifierCommand extends Command {
     }
 
     async accept(interaction: ChatInputCommandInteraction): Promise<void> {
+        await interaction.deferReply({ephemeral: true})
+
         const config = await Config.getLowConfig()
 
-        const verifier: VerifierSchema = {
-            role: {
-                id: (interaction.options.getRole('роль')?.id || '0')
-            }
+        const verifier: SetupVerifier = {
+            role_id: (interaction.options.getRole('роль')?.id || '0')
         }
 
         await config.update((config) => {
-            config['commands'][this.name] = verifier
+            config.commands.setupVerifier = verifier
         })
 
         const embed = new EmbedBuilder()
             .setTitle('✅ Успішно!')
-            .setDescription(`Тепер <@&${verifier.role.id}> буде перевіряти заявки від учасників на вступ до сервера.`)
+            .setDescription(`Тепер <@&${verifier.role_id}> буде перевіряти заявки від учасників на вступ до сервера.`)
             .setColor('#4b73f5')
             .setTimestamp()
 
-        await interaction.reply({
-            embeds: [embed],
-            ephemeral: true
+        await interaction.editReply({
+            embeds: [embed]
         })
     }
 

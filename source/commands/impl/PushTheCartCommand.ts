@@ -1,5 +1,5 @@
 import {Command} from "../Command"
-import {ChannelType, ChatInputCommandInteraction, Client} from 'discord.js'
+import {ChannelType, ChatInputCommandInteraction, Client, Message} from 'discord.js'
 import {Main} from "../../Main"
 import {Config} from "../../Config";
 
@@ -23,7 +23,7 @@ export class PushTheCartCommand extends Command {
             })
         })
 
-        client.on('messageCreate', async (message) => {
+        client.on('messageCreateSafe', async (message: Message) => {
             if (!message.content) return
             if (message.author?.bot) return
             if (message.channel.type !== ChannelType.GuildText) return
@@ -36,25 +36,33 @@ export class PushTheCartCommand extends Command {
                 .trim()
 
             const isPushing = possibleAliases.find((alias) => message.content.includes(alias))
+            if (!isPushing) return
 
             if (isPushing) {
-                const config = await Config.getLowConfig()
+                await Config.asyncUpdate(async (config) => {
+                    const pushDistance = Math.floor(Math.random() * 15) + 3
 
-                const pushDistance = Math.floor(Math.random() * 15) + 3
-                const pushTheCart = config.data.push_the_cart
+                    const user = config.economy.users[message.author.id]
+                    const games = config.economy.games
 
-                if ((Date.now() - pushTheCart.last_time_pushed) >= (60 * 60 * 1000)) {
-                    pushTheCart.current_distance = (!pushTheCart.current_distance ? 0 : pushTheCart.current_distance)
-                    pushTheCart.last_time_pushed = Date.now()
+                    games.pushTheCart = games.pushTheCart ? games.pushTheCart : {
+                        current_distance: 0,
+                        last_time_pushed: 0
+                    }
 
-                    pushTheCart.current_distance += pushDistance
+                    const oneHour = 60 * 60 * 1000
+                    const timePassed = (Date.now() - games.pushTheCart.last_time_pushed) >= oneHour
+                    if (!timePassed) return false
+
+                    games.pushTheCart.current_distance += pushDistance
+                    user.balance += pushDistance
 
                     await message.reply({
-                        content: `<:pushing_the_cart_1:1407868049649963128><:pushing_the_cart_1:1407868062547447899> Вагонетка проїхала **${pushDistance}** метрів (${pushTheCart.current_distance.toLocaleString('en-US')} загалом).`
+                        content: `<:pushing_the_cart_1:1407868049649963128><:pushing_the_cart_1:1407868062547447899> Вагонетка проїхала **${pushDistance}** метрів (${games.pushTheCart.current_distance.toLocaleString('en-US')} загалом).`
                     })
 
-                    await config.write()
-                }
+                    return true
+                })
 
                 /*
                 Можна пушити через 4 години після останнього пушу

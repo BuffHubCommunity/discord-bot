@@ -14,12 +14,7 @@ export abstract class Command {
 
     abstract init(client: Client): void
 
-    isNeededCommand(interaction: ChatInputCommandInteraction): boolean {
-        return interaction.commandName === this.name
-    }
-
     abstract canAccept(interaction: ChatInputCommandInteraction): Promise<boolean>
-
     abstract accept(interaction: ChatInputCommandInteraction): Promise<any>
     abstract reject(interaction: ChatInputCommandInteraction): Promise<any>
 
@@ -61,5 +56,10 @@ export abstract class Command {
 
     isAdministrator(member: (GuildMember | any)) {
         return this.hasPermission(member, PermissionsBitField.Flags.Administrator)
+    }
+
+
+    userWantsToExecuteThisCommand(interaction: ChatInputCommandInteraction): boolean {
+        return interaction.commandName === this.name
     }
 }

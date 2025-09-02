@@ -2,12 +2,8 @@ import {Command} from "../Command"
 import {ChatInputCommandInteraction, Client, EmbedBuilder, RestOrArray} from "discord.js"
 import {Config} from "../../Config"
 
-const __COUNTRIES__ = JSON.parse(`{"NULL": "Невідома", "US": "United States", "CA": "Canada", "AF": "Afghanistan", "AX": "Aland Islands", "AL": "Albania", "DZ": "Algeria", "AS": "American Samoa", "AD": "Andorra", "AO": "Angola", "AI": "Anguilla", "AQ": "Antarctica", "AG": "Antigua & Barbuda", "AR": "Argentina", "AM": "Armenia", "AW": "Aruba", "AU": "Australia", "AT": "Austria", "AZ": "Azerbaijan", "BS": "Bahamas", "BH": "Bahrain", "BD": "Bangladesh", "BB": "Barbados", "BY": "Belarus", "BE": "Belgium", "BZ": "Belize", "BJ": "Benin", "BM": "Bermuda", "BT": "Bhutan", "BO": "Bolivia", "BQ": "Bonaire, Sint Eustatius and Saba", "BA": "Bosnia and Herzegovina", "BW": "Botswana", "BV": "Bouvet Island", "BR": "Brazil", "IO": "British Indian Ocean Territory", "VG": "British Virgin Islands", "BN": "Brunei Darussalam", "BG": "Bulgaria", "BF": "Burkina Faso", "BI": "Burundi", "KH": "Cambodia", "CM": "Cameroon", "CV": "Cape Verde", "KY": "Cayman Islands", "CF": "Central African Republic", "TD": "Chad", "CL": "Chile", "CN": "China", "CX": "Christmas Island", "CC": "Cocos (Keeling) Islands", "CO": "Colombia", "KM": "Comoros", "CG": "Congo", "CD": "Congo, the Democratic Republic of the", "CK": "Cook Islands", "CR": "Costa Rica", "CI": "Cote D'ivoire (Ivory Coast)", "HR": "Croatia", "CU": "Cuba", "CW": "Curacao", "CY": "Cyprus", "CZ": "Czech Republic", "DK": "Denmark", "DJ": "Djibouti", "DM": "Dominica", "DO": "Dominican Republic", "EC": "Ecuador", "EG": "Egypt", "SV": "El Salvador", "GQ": "Equatorial Guinea", "ER": "Eritrea", "EE": "Estonia", "ET": "Ethiopia", "FK": "Falkland Islands (Malvinas)", "FO": "Faroe Islands", "FJ": "Fiji", "FI": "Finland", "FR": "France", "GF": "French Guiana", "PF": "French Polynesia", "TF": "French Southern Territories", "GA": "Gabon", "GM": "Gambia", "GE": "Georgia", "DE": "Germany", "GH": "Ghana", "GI": "Gibraltar", "GR": "Greece", "GL": "Greenland", "GD": "Grenada", "GP": "Guadeloupe", "GU": "Guam", "GT": "Guatemala", "GG": "Guernsey", "GN": "Guinea", "GW": "Guinea-Bissau", "GY": "Guyana", "HT": "Haiti", "HM": "Heard & McDonald Islands", "HN": "Honduras", "HK": "Hong Kong", "HU": "Hungary", "IS": "Iceland", "IN": "India", "ID": "Indonesia", "IQ": "Iraq", "IE": "Ireland", "IR": "Islamic Republic of Iran", "IM": "Isle of Man", "IL": "Israel", "IT": "Italy", "JM": "Jamaica", "JP": "Japan", "JE": "Jersey", "JO": "Jordan", "KZ": "Kazakhstan", "KE": "Kenya", "KI": "Kiribati", "KP": "Korea, Democratic People's Republic of", "KR": "Korea, Republic of", "XK": "Kosovo", "KW": "Kuwait", "KG": "Kyrgyzstan", "LA": "Laos", "LV": "Latvia", "LB": "Lebanon", "LS": "Lesotho", "LR": "Liberia", "LY": "Libya", "LI": "Liechtenstein", "LT": "Lithuania", "LU": "Luxembourg", "MO": "Macau", "MK": "Macedonia, The Former Yugoslav Republic of", "MG": "Madagascar", "MW": "Malawi", "MY": "Malaysia", "MV": "Maldives", "ML": "Mali", "MT": "Malta", "MH": "Marshall Islands", "MQ": "Martinique", "MR": "Mauritania", "MU": "Mauritius", "YT": "Mayotte", "MX": "Mexico", "FM": "Micronesia", "MD": "Moldova, Republic of", "MC": "Monaco", "MN": "Mongolia", "MS": "Monserrat", "ME": "Montenegro", "MA": "Morocco", "MZ": "Mozambique", "MM": "Myanmar", "NA": "Namibia", "NR": "Nauru", "NP": "Nepal", "NL": "Netherlands", "NC": "New Caledonia", "NZ": "New Zealand", "NI": "Nicaragua", "NE": "Niger", "NG": "Nigeria", "NU": "Niue", "NF": "Norfolk Island", "MP": "Northern Mariana Islands", "NO": "Norway", "OM": "Oman", "PK": "Pakistan", "OM": "Oman", "PK": "Pakistan", "PW": "Palau", "PS": "Palestinian Territory, Occupied", "PA": "Panama", "PG": "Papua New Guinea", "PY": "Paraguay", "PE": "Peru", "PH": "Philippines", "PN": "Pitcairn", "PL": "Poland", "PT": "Portugal", "PR": "Puerto Rico", "QA": "Qatar", "RE": "Reunion", "RO": "Romania", "RU": "Russian Federation", "RW": "Rwanda", "BL": "Saint Barthelemy", "LC": "Saint Lucia", "MF": "Saint Martin (French part)", "WS": "Samoa", "SM": "San Marino", "ST": "Sao Tome & Principe", "SA": "Saudi Arabia", "SN": "Senegal", "RS": "Serbia", "SC": "Seychelles", "SL": "Sierra Leone", "SG": "Singapore", "SX": "Sint Maarten (Dutch part)", "SK": "Slovakia", "SI": "Slovenia", "SB": "Solomon Islands", "SO": "Somalia", "ZA": "South Africa", "GS": "South Georgia and the South Sandwich Islands", "SS": "South Sudan", "ES": "Spain", "LK": "Sri Lanka", "SH": "St. Helena", "KN": "St. Kitts and Nevis", "PM": "St. Pierre & Miquelon", "VC": "St. Vincent & the Grenadines", "SD": "Sudan", "SR": "Suriname", "SJ": "Svalbard & Jan Mayen Islands", "SZ": "Swaziland", "SE": "Sweden", "CH": "Switzerland", "SY": "Syrian Arab Republic", "TW": "Taiwan", "TJ": "Tajikistan", "TZ": "Tanzania, United Republic of", "TH": "Thailand", "TL": "Timor-Leste", "TG": "Togo", "TK": "Tokelau", "TO": "Tonga", "TT": "Trinidad & Tobago", "TN": "Tunisia", "TR": "Turkey", "TM": "Turkmenistan", "TC": "Turks & Caicos Islands", "TV": "Tuvalu", "UG": "Uganda", "UA": "Ukraine", "AE": "United Arab Emirates", "GB": "United Kingdom", "UM": "United States Minor Outlying", "VI": "United States Virgin Islands", "UY": "Uruguay", "UZ": "Uzbekistan", "VU": "Vanuatu", "VA": "Vatican City State (Holy See)", "VE": "Venezuela", "VN": "Viet Nam", "WF": "Wallis & Futuna Islands", "EH": "Western Sahara", "YE": "Yemen", "ZM": "Zambia", "ZW": "Zimbabwe"}`)
 const __DANGEROUS_COUNTRIES__ = JSON.parse(`["RU", "BY", "KZ", "TJ", "KG", "CN", "KP", "AM"]`)
 const __DANGEROUS_COUNTRIES_AS_EMOJI__ = JSON.parse(`{"RU": "🇷🇺", "BY": "🇧🇾", "KZ": "🇰🇿", "TJ": "🇹🇯", "KG": "🇰🇬", "CN": "🇨🇳", "KP": "🇰🇵", "AM": "🇦🇲"}`)
-
-const __FIELD_CHAR_LIMIT__ = 1024
-const __FALLBACK_CHAR_LIMIT__ = 24
 
 const SichFooter = {
     text: 'Ця перевірка стала можливою завдяки спільноті Sich',
@@ -22,89 +18,91 @@ export class VerifySteamProfileCommand extends Command {
 
     async canAccept(interaction: ChatInputCommandInteraction): Promise<boolean> {
         const config = await Config.getConfig()
-        const VerifierSchema = config['commands']['налаштувати-вартового']
+
+        const verifier = config.commands.setupVerifier
+        if (!verifier) return Promise.resolve(false)
 
         return Promise.resolve(
-            this.isAdministrator(interaction.member) || (VerifierSchema && this.hasRole(interaction.member, VerifierSchema.role.id))
+            this.hasRole(interaction.member, verifier.role_id) || this.isAdministrator(interaction.member)
         )
     }
 
     async accept(interaction: ChatInputCommandInteraction): Promise<any> {
         await interaction.deferReply()
 
-        const CheckType = (interaction.options.getString('тип') || '?')
-        const SteamUrl = (interaction.options.getString('посилання') || '?')
+        const checkType = interaction.options.getString('тип') || '?'
+        const steamUrl = interaction.options.getString('посилання') || '?'
 
-        const Username = this.parseInput(SteamUrl)
+        const username = this.parseInput(steamUrl)
 
-        if (!Username) {
+        if (!username) {
             return this.simpleReject(interaction,
                 '❌ Помилка!',
                 'Некоректний SteamID64 (має бути 17 цифр або посилання на профіль).'
             )
         }
 
-        let SteamID64: string
+        let steamID64: string
 
-        if (Username.type === 'SteamID64') {
-            SteamID64 = Username.value
+        if (username.type === 'SteamID64') {
+            steamID64 = username.value
         } else {
             try {
-                const SteamID64_response = await this.getSich(`https://sich.nesilar.com/api/user_vanityurl.php?vanityurl=${Username.value}`)
-                if (!SteamID64_response.ok) throw new Error('Статус: ' + SteamID64_response.status)
+                const steamID64Response = await this.getSich(`https://sich.nesilar.com/api/user_vanityurl.php?vanityurl=${username.value}`)
+                if (!steamID64Response.ok) throw new Error('Статус: ' + steamID64Response.status)
 
-                const SteamID64_Local = await SteamID64_response.json()
-                if (SteamID64_Local.error) throw new Error(SteamID64_Local.error)
+                const steamID64Local = await steamID64Response.json()
+                if (steamID64Local.error) throw new Error(steamID64Local.error)
 
-                SteamID64 = SteamID64_Local.steamid
+                steamID64 = steamID64Local.steamid
             } catch (error) {
                 return this.simpleReject(interaction,
                     '❌ Помилка!',
-                    `Невдалось отримати SteamID64 ${Username.value} (${error}).`
+                    `Невдалось отримати SteamID64 ${username.value} (${error}).`
                 )
             }
         }
 
-        switch (CheckType) {
+        switch (checkType) {
             case 'profile': {
-                let UserProfile: any
+                let userProfile: any
 
                 try {
-                    const UserProfile_response = await this.checkCategory('user_profile.php', SteamID64)
-                    if (!UserProfile_response.ok) throw new Error('Статус: ' + UserProfile_response.status)
+                    const userProfileResponse = await this.checkCategory('user_profile.php', steamID64)
+                    if (!userProfileResponse.ok) throw new Error('Статус: ' + userProfileResponse.status)
 
-                    const UserProfile_Local = await UserProfile_response.json()
-                    if (UserProfile_Local.error) throw new Error(UserProfile_Local.error)
+                    const userProfileLocal = await userProfileResponse.json()
+                    if (userProfileLocal.error) throw new Error(userProfileLocal.error)
 
-                    UserProfile = UserProfile_Local.data
+                    userProfile = userProfileLocal.data
                 } catch (error) {
                     return this.simpleReject(interaction,
                         '❌ Помилка!',
-                        `Невдалось отримати інформацію про ${Username.value} (${error}).`
+                        `Невдалось отримати інформацію про ${username.value} (${error}).`
                     )
                 }
 
-                UserProfile.real_name = (UserProfile.real_name === 'NULL')
+                userProfile.real_name = (userProfile.real_name === 'NULL')
                     ? 'Приховано'
-                    : UserProfile.real_name
-                UserProfile.timecreated = (UserProfile.timecreated === 'NULL')
+                    : userProfile.real_name
+                userProfile.timecreated = (userProfile.timecreated === 'NULL')
                     ? 'Приховано'
-                    : new Date(UserProfile.timecreated * 1000).toLocaleDateString('en-GB', {
+                    : new Date(userProfile.timecreated * 1000).toLocaleDateString('en-GB', {
                         year: 'numeric',
                         month: '2-digit',
                         day: '2-digit'
                     })
-                UserProfile.country = (UserProfile.country === 'NULL')
+                userProfile.country = (userProfile.country === 'NULL')
                     ? 'Приховано'
-                    : UserProfile.country
+                    : userProfile.country
 
                 const Content = [
                     '```ansi',
-                    `1) SteamID64           ${UserProfile.steamid}`,
-                    `2) Нікнейм             ${UserProfile.name}`,
-                    `3) Справжнє ім'я       ${UserProfile.real_name}`,
-                    `4) Дата Створення      ${UserProfile.timecreated}`,
-                    `5) Країна              ${UserProfile.country}`,
+                    `1) SteamID64           ${userProfile.steamid}`,
+                    `2) Нікнейм             ${userProfile.name}`,
+                    `3) Справжнє ім'я       ${userProfile.real_name}`,
+                    `4) Дата Створення      ${userProfile.timecreated}`,
+                    `5) Країна              ${userProfile.country}`,
                     '```'
                 ].join("\n")
 
@@ -113,7 +111,7 @@ export class VerifySteamProfileCommand extends Command {
                         new EmbedBuilder()
                             .setTitle('Профіль Користувача')
                             .setDescription(Content)
-                            .setThumbnail(`https://avatars.steamstatic.com/${UserProfile.avatar_hash}_medium.jpg`)
+                            .setThumbnail(`https://avatars.steamstatic.com/${userProfile.avatar_hash}_medium.jpg`)
                             .setColor(this.DEFAULT_COLOR)
                             .setFooter(SichFooter)
                             .setTimestamp()
@@ -125,7 +123,7 @@ export class VerifySteamProfileCommand extends Command {
                 let PurchasedGames: any
 
                 try {
-                    const PurchasedGames_response = await this.checkCategory('user_purchased.php', SteamID64)
+                    const PurchasedGames_response = await this.checkCategory('user_purchased.php', steamID64)
                     if (!PurchasedGames_response.ok) throw new Error('Статус: ' + PurchasedGames_response.status)
 
                     const PurchasedGames_Local = await PurchasedGames_response.json()
@@ -135,7 +133,7 @@ export class VerifySteamProfileCommand extends Command {
                 } catch (error) {
                     return this.simpleReject(interaction,
                         '❌ Помилка!',
-                        `Невдалось отримати інформацію про придбані ігри ${Username.value} (${error}).`
+                        `Невдалось отримати інформацію про придбані ігри ${username.value} (${error}).`
                     )
                 }
 
@@ -184,7 +182,7 @@ export class VerifySteamProfileCommand extends Command {
                 let WishlistGames: any
 
                 try {
-                    const WishlistGames_response = await this.checkCategory('user_wishlist.php', SteamID64)
+                    const WishlistGames_response = await this.checkCategory('user_wishlist.php', steamID64)
                     if (!WishlistGames_response.ok) throw new Error('Статус: ' + WishlistGames_response.status)
 
                     const WishlistGames_Local = await WishlistGames_response.json()
@@ -194,7 +192,7 @@ export class VerifySteamProfileCommand extends Command {
                 } catch (error) {
                     return this.simpleReject(interaction,
                         '❌ Помилка!',
-                        `Невдалось отримати інформацію про список бажаних ігор ${Username.value} (${error}).`
+                        `Невдалось отримати інформацію про список бажаних ігор ${username.value} (${error}).`
                     )
                 }
 
@@ -243,7 +241,7 @@ export class VerifySteamProfileCommand extends Command {
                 let Friends: any
 
                 try {
-                    const Friends_response = await this.checkCategory('user_friends.php', SteamID64)
+                    const Friends_response = await this.checkCategory('user_friends.php', steamID64)
                     if (!Friends_response.ok) throw new Error('Статус: ' + Friends_response.status)
 
                     const Friends_Local = await Friends_response.json()
@@ -253,7 +251,7 @@ export class VerifySteamProfileCommand extends Command {
                 } catch (error) {
                     return this.simpleReject(interaction,
                         '❌ Помилка!',
-                        `Невдалось отримати список друзів ${Username.value} (${error}).`
+                        `Невдалось отримати список друзів ${username.value} (${error}).`
                     )
                 }
 
