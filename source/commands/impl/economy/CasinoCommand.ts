@@ -4,7 +4,7 @@ import {Config} from "../../../Config";
 
 export class CasinoCommand extends Command {
     readonly name = 'казино'
-    readonly emojis = ['🍒', '🫐', '🍋', '7️⃣']
+    readonly emojis = ['🍋', '🫐', '🍓', '🍒', '🍉', '7️⃣', '👑']
 
     readonly currentPlayers: Set<string> = new Set<string>()
 
@@ -39,7 +39,12 @@ export class CasinoCommand extends Command {
                     // Крутимо одразу щоб уникнути проблем з абузом системи, анімуємо пізніше.
                     const slots: string[] = []
 
-                    // 1
+                    for (let i = 0; i < 3; i++) {
+                        const emoji = this.emojis[Math.floor(Math.random() * this.emojis.length)]
+                        slots.push(emoji)
+                    }
+
+                    /*// 1
                     const emoji1 = this.emojis[Math.floor(Math.random() * this.emojis.length)]
                     slots.push(emoji1)
 
@@ -67,7 +72,7 @@ export class CasinoCommand extends Command {
 
                         const emoji3 = Array.from(adjustedEmojis)[Math.floor(Math.random() * adjustedEmojis.size)]
                         slots.push(emoji3)
-                    }
+                    }*/
 
                     //
                     const multiplier = getSlotMultiplier(slots)
@@ -175,14 +180,13 @@ export class CasinoCommand extends Command {
             if (a === b && b === c) emoji = a
 
             switch (emoji) {
-                case '7️⃣':
-                    return 15
-                case '🍒':
-                    return 10
-                case '🫐':
-                    return 7.5
-                case '🍋':
-                    return 5
+                case '🍋': return 5.00
+                case '🫐': return 5.00
+                case '🍓': return 7.00
+                case '🍒': return 8.00
+                case '🍉': return 9.00
+                case '7️⃣': return 10.00
+                case '👑': return 10.00
             }
 
             // 2
@@ -190,16 +194,17 @@ export class CasinoCommand extends Command {
             if (b === c) emoji = b
             if (c === a) emoji = c
 
+            // '🍋', '🫐', '🍓', '🍒', '🍉', '7️⃣', '👑'
+
             if (emoji) {
                 switch (emoji) {
-                    case '7️⃣':
-                        return 5
-                    case '🍒':
-                        return 3
-                    case '🫐':
-                        return 2
-                    case '🍋':
-                        return 1.5
+                    case '🍋': return 1.50
+                    case '🫐': return 1.75
+                    case '🍓': return 2.00
+                    case '🍒': return 3.00
+                    case '🍉': return 4.00
+                    case '7️⃣': return 5.00
+                    case '👑': return 5.00
                 }
             }
 
