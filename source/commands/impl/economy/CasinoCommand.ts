@@ -54,19 +54,19 @@ export class CasinoCommand extends Command {
 
                     // 3
                     const isDouble = slots[0] === slots[1]
-                    const canTriple = Math.floor(Math.random() * 10) + 1 === 10
+                    const canRollTriple = Math.floor(Math.random() * 5) + 1 === 5
 
-                    if (isDouble && canTriple) {
-                        slots.push(slots[1])
+                    if (isDouble && canRollTriple) {
+                        const emoji3 = this.emojis[Math.floor(Math.random() * this.emojis.length)]
+                        slots.push(emoji3)
                     } else {
                         const adjustedEmojis = new Set<string>(this.emojis)
-                        adjustedEmojis.delete(slots[0])
-                        if (Math.floor(Math.random() * 5) != 3) {
-                            adjustedEmojis.delete(slots[1])
-                        }
 
-                        const emoji = Array.from(adjustedEmojis)[Math.floor(Math.random() * adjustedEmojis.size)]
-                        slots.push(emoji)
+                        adjustedEmojis.delete(slots[0])
+                        if (isDouble) adjustedEmojis.delete(slots[1])
+
+                        const emoji3 = Array.from(adjustedEmojis)[Math.floor(Math.random() * adjustedEmojis.size)]
+                        slots.push(emoji3)
                     }
 
                     //
