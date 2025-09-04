@@ -39,26 +39,37 @@ export class CasinoCommand extends Command {
                     // Крутимо одразу щоб уникнути проблем з абузом системи, анімуємо пізніше.
                     const slots: string[] = []
 
-                    for (let i = 0; i < 3; i++) {
-                        if (i === 0 || i === 1) {
-                            const emoji = this.emojis[Math.floor(Math.random() * this.emojis.length)]
-                            slots.push(emoji)
-                        } else {
-                            const isDouble = slots[0] === slots[1]
-                            const canTriple = Math.floor(Math.random() * 10) + 1 === 10
+                    // 1
+                    const emoji1 = this.emojis[Math.floor(Math.random() * this.emojis.length)]
+                    slots.push(emoji1)
 
-                            if (isDouble && canTriple) {
-                                slots.push(slots[1])
-                            } else {
-                                const adjustedEmojis = new Set<string>(this.emojis)
-                                adjustedEmojis.delete(slots[1])
-
-                                const emoji = Array.from(adjustedEmojis)[Math.floor(Math.random() * adjustedEmojis.size)]
-                                slots.push(emoji)
-                            }
-                        }
+                    // 2
+                    const adjustedEmojis = new Set<string>(this.emojis)
+                    if (Math.floor(Math.random() * 5) === 3) {
+                        adjustedEmojis.delete(slots[0])
                     }
 
+                    const emoji2 = Array.from(adjustedEmojis)[Math.floor(Math.random() * adjustedEmojis.size)]
+                    slots.push(emoji2)
+
+                    // 3
+                    const isDouble = slots[0] === slots[1]
+                    const canTriple = Math.floor(Math.random() * 10) + 1 === 10
+
+                    if (isDouble && canTriple) {
+                        slots.push(slots[1])
+                    } else {
+                        const adjustedEmojis = new Set<string>(this.emojis)
+                        adjustedEmojis.delete(slots[0])
+                        if (Math.floor(Math.random() * 5) != 3) {
+                            adjustedEmojis.delete(slots[1])
+                        }
+
+                        const emoji = Array.from(adjustedEmojis)[Math.floor(Math.random() * adjustedEmojis.size)]
+                        slots.push(emoji)
+                    }
+
+                    //
                     const multiplier = getSlotMultiplier(slots)
 
                     await Config.asyncUpdate(async (config) => {

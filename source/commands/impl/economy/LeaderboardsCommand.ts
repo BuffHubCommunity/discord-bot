@@ -20,11 +20,13 @@ export class LeaderboardsCommand extends Command {
         const guild = (interaction.guild as Guild) // Ніколи не undefined, перевіряємо у Main.ts.
         const config = await Config.getConfig()
 
+        await guild.members.fetch()
+
         // Замінюємо користувачів з undefined, які не у спільноті.
         const validUsers = await Promise.all(
             Object.entries(config.economy.users)
                 .map(async ([id, balance]) => {
-                    const user = await this.getUser(guild, id)
+                    const user = guild.members.cache.get(id)
                     return user ? [id, balance] : null
                 })
         )
@@ -82,16 +84,5 @@ export class LeaderboardsCommand extends Command {
 
     reject(interaction: ChatInputCommandInteraction): Promise<void> {
         return Promise.resolve(undefined)
-    }
-
-    async getUser(guild: Guild, id: string) {
-        const member = guild.members.cache.get(id)
-        if (member) return member
-
-        try {
-            return await guild.members.fetch(id)
-        } catch (error) {
-            return undefined
-        }
     }
 }
