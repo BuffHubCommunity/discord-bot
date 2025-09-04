@@ -48,10 +48,10 @@ import {PushTheCartCommand} from "./commands/impl/PushTheCartCommand";
         new BalanceCommand(),
         new LeaderboardsCommand(),
         new PushTheCartCommand(),
-        // new CasinoCommand()
+        new CasinoCommand()
     ]
 
-    client.on('ready', () => {
+    client.on('clientReady', () => {
         console.log('Бот запущений.')
     })
 

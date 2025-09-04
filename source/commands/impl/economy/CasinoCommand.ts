@@ -40,8 +40,23 @@ export class CasinoCommand extends Command {
                     const slots: string[] = []
 
                     for (let i = 0; i < 3; i++) {
-                        const emoji = this.emojis[Math.floor(Math.random() * this.emojis.length)]
-                        slots.push(emoji)
+                        if (i === 0 || i === 1) {
+                            const emoji = this.emojis[Math.floor(Math.random() * this.emojis.length)]
+                            slots.push(emoji)
+                        } else {
+                            const isDouble = slots[0] === slots[1]
+                            const canTriple = Math.floor(Math.random() * 15) + 1 === 15
+
+                            if (isDouble && canTriple) {
+                                slots.push(slots[1])
+                            } else {
+                                const adjustedEmojis = new Set<string>(this.emojis)
+                                adjustedEmojis.delete(slots[1])
+
+                                const emoji = Array.from(adjustedEmojis)[Math.floor(Math.random() * adjustedEmojis.size)]
+                                slots.push(emoji)
+                            }
+                        }
                     }
 
                     const multiplier = getSlotMultiplier(slots)
@@ -77,7 +92,7 @@ export class CasinoCommand extends Command {
                             slots[0] || '❔',
                             slots[1] || '❔',
                             slots[2] || '❔',
-                            `Ви програли ${deposit} монет.`
+                            `-${deposit}`
                         )
                     } else {
                         const win = Math.floor((deposit * multiplier) - deposit)
@@ -86,7 +101,7 @@ export class CasinoCommand extends Command {
                             slots[0] || '❔',
                             slots[1] || '❔',
                             slots[2] || '❔',
-                            (deposit === win ? 'Ви нічого не програли' : `Ви виграли ${win} монет.`)
+                            `-${deposit}\n+${win}`
                         )
                     }
 
@@ -98,7 +113,33 @@ export class CasinoCommand extends Command {
             }
         }
 
-        async function editReply(deposit: number, slot1: string, slot2: string, slot3: string, footer?: string) {
+        async function editReply(deposit: number, slot1: string, slot2: string, slot3: string, results?: string) {
+            const fields = [
+                {
+                    name: '',
+                    value: `\`\`\` ${slot1} \`\`\``,
+                    inline: true
+                },
+                {
+                    name: '',
+                    value: `\`\`\` ${slot2} \`\`\``,
+                    inline: true
+                },
+                {
+                    name: '',
+                    value: `\`\`\` ${slot3} \`\`\``,
+                    inline: true
+                }
+            ]
+
+            if (results) {
+                fields.push({
+                    name: '',
+                    value: `\`\`\`diff\n${results}\n\`\`\``,
+                    inline: false
+                })
+            }
+
             await interaction.editReply({
                 embeds: [
                     new EmbedBuilder()
@@ -108,24 +149,7 @@ export class CasinoCommand extends Command {
                             `🪙 Ставка: ${deposit}`,
                             '```'
                         ].join('\n'))
-                        .addFields(
-                            {
-                                name: '',
-                                value: `\`\`\` ${slot1} \`\`\``,
-                                inline: true
-                            },
-                            {
-                                name: '',
-                                value: `\`\`\` ${slot2} \`\`\``,
-                                inline: true
-                            },
-                            {
-                                name: '',
-                                value: `\`\`\` ${slot3} \`\`\``,
-                                inline: true
-                            },
-                        )
-                        .setFooter({text: footer || ' '})
+                        .addFields(fields)
                         .setColor('#4b73f5')
                 ]
             })
@@ -140,10 +164,14 @@ export class CasinoCommand extends Command {
             if (a === b && b === c) emoji = a
 
             switch (emoji) {
-                case '7️⃣': return 15
-                case '🍒': return 10
-                case '🫐': return 7.5
-                case '🍋': return 5
+                case '7️⃣':
+                    return 15
+                case '🍒':
+                    return 10
+                case '🫐':
+                    return 7.5
+                case '🍋':
+                    return 5
             }
 
             // 2
@@ -153,10 +181,14 @@ export class CasinoCommand extends Command {
 
             if (emoji) {
                 switch (emoji) {
-                    case '7️⃣': return 5
-                    case '🍒': return 3
-                    case '🫐': return 2
-                    case '🍋': return 1.5
+                    case '7️⃣':
+                        return 5
+                    case '🍒':
+                        return 3
+                    case '🫐':
+                        return 2
+                    case '🍋':
+                        return 1.5
                 }
             }
 
