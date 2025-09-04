@@ -24,8 +24,8 @@ export class BalanceAdminCommand extends Command {
             const user = config.economy.users[guildMember.id]
 
             user.balance =
-                (action === 'додати') ? (user.balance + amount) :
-                    (action === 'відняти') ? (user.balance - amount) : 0
+                (action === 'plus') ? (user.balance + amount) :
+                    (action === 'minus') ? (user.balance - amount) : user.balance
 
             await interaction.editReply({
                 embeds: [
