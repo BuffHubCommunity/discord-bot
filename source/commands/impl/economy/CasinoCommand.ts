@@ -45,7 +45,7 @@ export class CasinoCommand extends Command {
 
                     // 2
                     const adjustedEmojis = new Set<string>(this.emojis)
-                    if (Math.floor(Math.random() * 5) === 3) {
+                    if (Math.floor(Math.random() * 2) === 1) {
                         adjustedEmojis.delete(slots[0])
                     }
 
