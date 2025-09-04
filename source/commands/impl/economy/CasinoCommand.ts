@@ -45,7 +45,7 @@ export class CasinoCommand extends Command {
                             slots.push(emoji)
                         } else {
                             const isDouble = slots[0] === slots[1]
-                            const canTriple = Math.floor(Math.random() * 15) + 1 === 15
+                            const canTriple = Math.floor(Math.random() * 10) + 1 === 10
 
                             if (isDouble && canTriple) {
                                 slots.push(slots[1])
