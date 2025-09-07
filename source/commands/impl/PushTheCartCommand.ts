@@ -54,11 +54,16 @@ export class PushTheCartCommand extends Command {
                     const timePassed = (Date.now() - games.pushTheCart.last_time_pushed) >= oneHour
                     if (!timePassed) return false
 
+                    games.pushTheCart.last_time_pushed += Date.now()
                     games.pushTheCart.current_distance += pushDistance
                     user.balance += pushDistance
 
+                    const pushingCartEmoji = '<:pushing_the_cart_1:1407868049649963128><:pushing_the_cart_1:1407868062547447899>'
+                    const totalDistance = games.pushTheCart.current_distance.toLocaleString('en-US')
+                    const discordTimestamp = `<t:${Math.floor((Date.now() + oneHour) / 1000)}:R>`
+
                     await message.reply({
-                        content: `<:pushing_the_cart_1:1407868049649963128><:pushing_the_cart_1:1407868062547447899> Вагонетка проїхала **${pushDistance}** метрів (${games.pushTheCart.current_distance.toLocaleString('en-US')} загалом).`
+                        content: `${pushingCartEmoji} Вагонетка проїхала **${pushDistance}** метрів (${totalDistance} загалом).\n-# Ворожий шпигун перестане блокувати вагонетку ${discordTimestamp}.`
                     })
 
                     return true
