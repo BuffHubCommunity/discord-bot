@@ -54,7 +54,7 @@ export class PushTheCartCommand extends Command {
                     const timePassed = (Date.now() - games.pushTheCart.last_time_pushed) >= oneHour
                     if (!timePassed) return false
 
-                    games.pushTheCart.last_time_pushed += Date.now()
+                    games.pushTheCart.last_time_pushed = Date.now()
                     games.pushTheCart.current_distance += pushDistance
                     user.balance += pushDistance
 
