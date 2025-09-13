@@ -27,7 +27,6 @@ export abstract class Command {
                     .setTitle(title)
                     .setDescription(reason)
                     .setColor(this.DEFAULT_COLOR)
-                    .setTimestamp()
             ]
         }))
     }

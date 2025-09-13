@@ -69,29 +69,31 @@ export class CasinoCommand extends Command {
                     await editReply(deposit, '❔', '❔', '❔')
                     await sleep(2.0)
 
-                    for (let i = 0; i < slots.length; i++) {
+                    for (let i = 0; i < (slots.length + 1); i++) {
                         await sleep(1.5)
 
-                        await editReply(deposit,
-                            i >= 0 ? slots[0] : '❔',
-                            i >= 1 ? slots[1] : '❔',
-                            i >= 2 ? slots[2] : '❔'
-                        )
+                        if (i < slots.length) {
+                            // Анімуємо "крутку" слотів.
+                            await editReply(deposit,
+                                i >= 0 ? slots[0] : '❔',
+                                i >= 1 ? slots[1] : '❔',
+                                i >= 2 ? slots[2] : '❔'
+                            )
+                        } else {
+                            // Відображаємо результат після повної анімації.
+                            const win = Math.floor((deposit * multiplier) - deposit)
+                            const result = (multiplier === 1) ? `-${deposit}` : `-${deposit}\n+${win}`
+
+                            await editReply(deposit,
+                                slots[0] || '❔',
+                                slots[1] || '❔',
+                                slots[2] || '❔',
+                                result
+                            )
+
+                            GamblingSystem.__PLAYERS__.delete(guildMember.id)
+                        }
                     }
-
-                    await sleep(1.5)
-
-                    const win = Math.floor((deposit * multiplier) - deposit)
-                    const result = (multiplier === 1) ? `-${deposit}` : `-${deposit}\n+${win}`
-
-                    await editReply(deposit,
-                        slots[0] || '❔',
-                        slots[1] || '❔',
-                        slots[2] || '❔',
-                        result
-                    )
-
-                    GamblingSystem.__PLAYERS__.delete(guildMember.id)
                 }
             }
         }

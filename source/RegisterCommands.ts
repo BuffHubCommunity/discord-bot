@@ -112,6 +112,13 @@ import {REST, Routes, SlashCommandBuilder} from "discord.js";
                 .setName('кубики')
                 .setDescription('Гра у кубики.')
                 .addNumberOption((option) => option
+                    .setName('число')
+                    .setDescription('Результат кубика, на який Ви робите ставку.')
+                    .setRequired(true)
+                    .setMinValue(1)
+                    .setMaxValue(6)
+                )
+                .addNumberOption((option) => option
                     .setName('ставка')
                     .setDescription('Кількість монет для депозиту.')
                     .setRequired(true)
