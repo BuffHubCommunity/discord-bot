@@ -10,7 +10,7 @@ export class BalanceAdminCommand extends Command {
     }
 
     canAccept(interaction: ChatInputCommandInteraction): Promise<boolean> {
-        return Promise.resolve(true)
+        return Promise.resolve(this.isAdministrator(interaction.member))
     }
 
     async accept(interaction: ChatInputCommandInteraction): Promise<void> {

@@ -21,9 +21,10 @@ import {BalanceCommand} from "./commands/impl/economy/BalanceCommand";
 import {LeaderboardsCommand} from "./commands/impl/economy/LeaderboardsCommand";
 import {VerifySteamProfileCommand} from "./commands/impl/VerifySteamProfileCommand";
 import {Config} from "./Config";
-import {CasinoCommand} from "./commands/impl/economy/CasinoCommand";
+import {CasinoCommand} from "./commands/impl/economy/gambling/CasinoCommand";
 import {PushTheCartCommand} from "./commands/impl/PushTheCartCommand";
 import {BalanceAdminCommand} from "./commands/impl/economy/BalanceAdminCommand";
+import {DiceCommand} from "./commands/impl/economy/gambling/DiceCommand";
 
 (async () => {
     const client = new Client({
@@ -50,7 +51,8 @@ import {BalanceAdminCommand} from "./commands/impl/economy/BalanceAdminCommand";
         new BalanceAdminCommand(),
         new LeaderboardsCommand(),
         new PushTheCartCommand(),
-        new CasinoCommand()
+        new CasinoCommand(),
+        new DiceCommand()
     ]
 
     client.on('clientReady', () => {

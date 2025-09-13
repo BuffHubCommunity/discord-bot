@@ -83,14 +83,40 @@ import {REST, Routes, SlashCommandBuilder} from "discord.js";
                 .setMinValue(1)
             ),
 
+        /*        new SlashCommandBuilder()
+                    .setName('казино')
+                    .setDescription('Маніпуляції з балансом учасників.')
+                    .addNumberOption((option) => option
+                        .setName('ставка')
+                        .setDescription('Кількість монет для депозиту.')
+                        .setRequired(true)
+                        .setMinValue(1)
+                    ),*/
+
+        // Казино
         new SlashCommandBuilder()
             .setName('казино')
-            .setDescription('Маніпуляції з балансом учасників.')
-            .addNumberOption((option) => option
-                .setName('ставка')
-                .setDescription('Кількість монет для депозиту.')
-                .setRequired(true)
-                .setMinValue(1)
+            .setDescription('Набір міні-ігор, з можливістю виграти або програти монети.')
+            .addSubcommand((command) => command
+                .setName('слот-машина')
+                .setDescription('Гра у слот-машину.')
+                .addNumberOption((option) => option
+                    .setName('ставка')
+                    .setDescription('Кількість монет для депозиту.')
+                    .setRequired(true)
+                    .setMinValue(1)
+                )
+
+            )
+            .addSubcommand((command) => command
+                .setName('кубики')
+                .setDescription('Гра у кубики.')
+                .addNumberOption((option) => option
+                    .setName('ставка')
+                    .setDescription('Кількість монет для депозиту.')
+                    .setRequired(true)
+                    .setMinValue(1)
+                )
             )
     ]
 

@@ -15,7 +15,9 @@ export abstract class Command {
     abstract init(client: Client): void
 
     abstract canAccept(interaction: ChatInputCommandInteraction): Promise<boolean>
+
     abstract accept(interaction: ChatInputCommandInteraction): Promise<any>
+
     abstract reject(interaction: ChatInputCommandInteraction): Promise<any>
 
     async simpleReject(interaction: ChatInputCommandInteraction, title: string, reason: string): Promise<any> {
@@ -60,6 +62,15 @@ export abstract class Command {
 
 
     userWantsToExecuteThisCommand(interaction: ChatInputCommandInteraction): boolean {
-        return interaction.commandName === this.name
+        const fullCommand = [
+            interaction.commandName,
+            interaction.options.getSubcommandGroup(false),
+            interaction.options.getSubcommand(false)
+        ]
+            .map((part) => part ? part : null)
+            .filter((part) => part != null)
+            .join(' ')
+
+        return fullCommand === this.name
     }
 }

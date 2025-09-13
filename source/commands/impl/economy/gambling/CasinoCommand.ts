@@ -1,12 +1,11 @@
-import {Command} from '../../Command'
+import {Command} from '../../../Command'
 import {ChatInputCommandInteraction, Client, EmbedBuilder, GuildMember} from 'discord.js'
-import {Config} from "../../../Config";
+import {Config} from "../../../../Config";
+import {GamblingSystem} from "./GamblingSystem";
 
 export class CasinoCommand extends Command {
-    readonly name = 'казино'
+    readonly name = 'казино слот-машина'
     readonly emojis = ['🍋', '🫐', '🍓', '🍒', '🍉', '7️⃣', '👑']
-
-    readonly currentPlayers: Set<string> = new Set<string>()
 
     init(client: Client): void {
     }
@@ -18,25 +17,35 @@ export class CasinoCommand extends Command {
     async accept(interaction: ChatInputCommandInteraction): Promise<void> {
         const guildMember = (interaction.member as GuildMember)
 
-        if (this.currentPlayers.has(guildMember.id)) {
+        if (GamblingSystem.__PLAYERS__.has(guildMember.id)) {
+            // Гравець сам видалиться зі списку після програття анімації.
+            // GamblingSystem.__PLAYERS__.add(guildMember.id)
             await interaction.deferReply({ephemeral: true})
+
             await this.simpleReject(interaction, '🎰 Слот Машина', 'Ви вже приймаєте участь у казино.')
         } else {
-            this.currentPlayers.add(guildMember.id)
-            await interaction.deferReply()
+            GamblingSystem.__PLAYERS__.add(guildMember.id)
 
             const deposit = Math.floor(interaction.options.getNumber('ставка') || 0)
 
             if (deposit < 50) {
-                this.currentPlayers.delete(guildMember.id)
+                GamblingSystem.__PLAYERS__.delete(guildMember.id)
+                await interaction.deferReply({ephemeral: true})
+
                 await this.simpleReject(interaction, '🎰 Слот Машина', 'Ставка не може бути менше ніж 50.')
             } else {
                 const config = await Config.getConfig()
+                const userEconomy = config.economy.users[guildMember.user.id]
 
-                const memberEconomy = config.economy.users[guildMember.user.id]
+                if (userEconomy.balance < deposit) {
+                    GamblingSystem.__PLAYERS__.delete(guildMember.id)
+                    await interaction.deferReply({ephemeral: true})
 
-                if (memberEconomy.balance >= deposit) {
-                    // Крутимо одразу щоб уникнути проблем з абузом системи, анімуємо пізніше.
+                    await this.simpleReject(interaction, '🎰 Слот Машина', 'У Вас недостатньо монет для депозиту.')
+                } else {
+                    await interaction.deferReply()
+
+                    // Отримуємо результат зараз, анімуємо пізніше.
                     const slots: string[] = []
 
                     for (let i = 0; i < 3; i++) {
@@ -44,37 +53,7 @@ export class CasinoCommand extends Command {
                         slots.push(emoji)
                     }
 
-                    /*// 1
-                    const emoji1 = this.emojis[Math.floor(Math.random() * this.emojis.length)]
-                    slots.push(emoji1)
-
-                    // 2
-                    const adjustedEmojis = new Set<string>(this.emojis)
-                    if (Math.floor(Math.random() * 2) === 1) {
-                        adjustedEmojis.delete(slots[0])
-                    }
-
-                    const emoji2 = Array.from(adjustedEmojis)[Math.floor(Math.random() * adjustedEmojis.size)]
-                    slots.push(emoji2)
-
-                    // 3
-                    const isDouble = slots[0] === slots[1]
-                    const canRollTriple = Math.floor(Math.random() * 5) + 1 === 5
-
-                    if (isDouble && canRollTriple) {
-                        const emoji3 = this.emojis[Math.floor(Math.random() * this.emojis.length)]
-                        slots.push(emoji3)
-                    } else {
-                        const adjustedEmojis = new Set<string>(this.emojis)
-
-                        adjustedEmojis.delete(slots[0])
-                        if (isDouble) adjustedEmojis.delete(slots[1])
-
-                        const emoji3 = Array.from(adjustedEmojis)[Math.floor(Math.random() * adjustedEmojis.size)]
-                        slots.push(emoji3)
-                    }*/
-
-                    //
+                    // Вираховуємо суму, та зберігаємо у конфіг.
                     const multiplier = getSlotMultiplier(slots)
 
                     await Config.asyncUpdate(async (config) => {
@@ -88,11 +67,10 @@ export class CasinoCommand extends Command {
 
                     // Анімуємо.
                     await editReply(deposit, '❔', '❔', '❔')
-
-                    await new Promise((resolve) => setTimeout(resolve, 2_000))
+                    await sleep(2.0)
 
                     for (let i = 0; i < slots.length; i++) {
-                        await new Promise((resolve) => setTimeout(resolve, 1_500))
+                        await sleep(1.5)
 
                         await editReply(deposit,
                             i >= 0 ? slots[0] : '❔',
@@ -101,32 +79,25 @@ export class CasinoCommand extends Command {
                         )
                     }
 
-                    await new Promise((resolve) => setTimeout(resolve, 1_500))
+                    await sleep(1.5)
 
-                    if (multiplier === 1) {
-                        await editReply(deposit,
-                            slots[0] || '❔',
-                            slots[1] || '❔',
-                            slots[2] || '❔',
-                            `-${deposit}`
-                        )
-                    } else {
-                        const win = Math.floor((deposit * multiplier) - deposit)
+                    const win = Math.floor((deposit * multiplier) - deposit)
+                    const result = (multiplier === 1) ? `-${deposit}` : `-${deposit}\n+${win}`
 
-                        await editReply(deposit,
-                            slots[0] || '❔',
-                            slots[1] || '❔',
-                            slots[2] || '❔',
-                            `-${deposit}\n+${win}`
-                        )
-                    }
+                    await editReply(deposit,
+                        slots[0] || '❔',
+                        slots[1] || '❔',
+                        slots[2] || '❔',
+                        result
+                    )
 
-                    this.currentPlayers.delete(guildMember.id)
-                } else {
-                    this.currentPlayers.delete(guildMember.id)
-                    await this.simpleReject(interaction, '🎰 Слот Машина', 'У Вас недостатньо монет для депозиту.')
+                    GamblingSystem.__PLAYERS__.delete(guildMember.id)
                 }
             }
+        }
+
+        async function sleep(seconds: number) {
+            return await new Promise((resolve) => setTimeout(resolve, seconds * 1000))
         }
 
         async function editReply(deposit: number, slot1: string, slot2: string, slot3: string, results?: string) {
@@ -210,32 +181,9 @@ export class CasinoCommand extends Command {
 
             return 1
         }
-
-        /*await interaction.deferReply({ephemeral: true})
-
-        const config = await Config.getConfig()
-        const balance =  config['economy']['users'][(interaction.member as GuildMember).user.id] || 0
-
-        const embed = new EmbedBuilder()
-            .setTitle('💰 Баланс')
-            .setDescription(`Ваш поточний баланс: \`\`\`${balance.total_balance}\`\`\``)
-            .setColor('#4b73f5')
-
-        await interaction.editReply({
-            embeds: [embed]
-        })*/
     }
 
     reject(interaction: ChatInputCommandInteraction): Promise<void> {
         return Promise.resolve(undefined)
-    }
-
-    millisToTime(millis: number): string {
-        const totalSeconds = Math.floor(millis / 1000)
-
-        const hours = Math.floor(totalSeconds / 3600)
-        const minutes = Math.floor((totalSeconds % 3600) / 60)
-
-        return `${hours}г ${minutes}хв`
     }
 }
