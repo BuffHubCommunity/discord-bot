@@ -99,7 +99,15 @@ export class BalanceAdminCommand extends Command {
         })*/
     }
 
-    reject(interaction: ChatInputCommandInteraction): Promise<void> {
-        return Promise.resolve(undefined)
+    async reject(interaction: ChatInputCommandInteraction): Promise<void> {
+        await interaction.reply({
+            embeds: [
+                new EmbedBuilder()
+                    .setTitle('❌ Помилка!')
+                    .setDescription('Ви не можете використовувати цю команду.')
+                    .setColor(this.DEFAULT_COLOR)
+            ],
+            ephemeral: true
+        })
     }
 }

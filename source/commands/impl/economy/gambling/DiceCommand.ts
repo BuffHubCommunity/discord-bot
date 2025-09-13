@@ -5,8 +5,6 @@ import {GamblingSystem} from "./GamblingSystem";
 export class DiceCommand extends Command {
     readonly name = 'казино кубики'
 
-    readonly currentPlayers: Set<string> = new Set<string>()
-
     init(client: Client): void {
     }
 
@@ -74,6 +72,4 @@ export class DiceCommand extends Command {
     reject(interaction: ChatInputCommandInteraction): Promise<void> {
         return Promise.resolve(undefined)
     }
-
-
 }
