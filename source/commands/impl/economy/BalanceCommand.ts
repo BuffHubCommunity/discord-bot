@@ -58,20 +58,6 @@ export class BalanceCommand extends Command {
                     .setColor(this.DEFAULT_COLOR)
             ]
         })
-
-        /*await interaction.deferReply({ephemeral: true})
-
-        const config = await Config.getConfig()
-        const balance =  config['economy']['users'][(interaction.member as GuildMember).user.id] || 0
-
-        const embed = new EmbedBuilder()
-            .setTitle('💰 Баланс')
-            .setDescription(`Ваш поточний баланс: \`\`\`${balance.total_balance}\`\`\``)
-            .setColor('#4b73f5')
-
-        await interaction.editReply({
-            embeds: [embed]
-        })*/
     }
 
     reject(interaction: ChatInputCommandInteraction): Promise<void> {

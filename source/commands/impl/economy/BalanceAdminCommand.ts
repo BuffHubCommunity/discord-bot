@@ -38,65 +38,6 @@ export class BalanceAdminCommand extends Command {
 
             return true
         })
-
-        /*await interaction.deferReply({ephemeral: true})
-        const user = (interaction.member as GuildMember).user
-
-        const config = await Config.getConfig()
-        const userId = user.id
-
-        const userEconomy = config.economy.users[userId]
-
-        await interaction.editReply({
-            embeds: [
-                new EmbedBuilder()
-                    .setTitle('💰 Баланс')
-                    .addFields(
-                        {
-                            name: 'Мій Баланс',
-                            value: [
-                                '```ansi',
-                                `🪙 ${userEconomy.balance}`,
-                                '```'
-                            ].join('\n'),
-                            inline: false
-                        },
-                        {
-                            name: 'Час у ГЧ',
-                            value: [
-                                '```ansi',
-                                `⌚ ${Main.millisToTime(userEconomy.voice_time_spent)}`,
-                                '```'
-                            ].join('\n'),
-                            inline: true
-                        },
-                        {
-                            name: 'Повідомлення у ТЧ',
-                            value: [
-                                '```ansi',
-                                `✉️ ${userEconomy.messages_sent}`,
-                                '```'
-                            ].join('\n'),
-                            inline: true
-                        },
-                    )
-                    .setColor(this.DEFAULT_COLOR)
-            ]
-        })*/
-
-        /*await interaction.deferReply({ephemeral: true})
-
-        const config = await Config.getConfig()
-        const balance =  config['economy']['users'][(interaction.member as GuildMember).user.id] || 0
-
-        const embed = new EmbedBuilder()
-            .setTitle('💰 Баланс')
-            .setDescription(`Ваш поточний баланс: \`\`\`${balance.total_balance}\`\`\``)
-            .setColor('#4b73f5')
-
-        await interaction.editReply({
-            embeds: [embed]
-        })*/
     }
 
     async reject(interaction: ChatInputCommandInteraction): Promise<void> {

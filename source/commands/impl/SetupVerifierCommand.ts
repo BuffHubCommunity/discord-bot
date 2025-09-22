@@ -44,7 +44,6 @@ export class SetupVerifierCommand extends Command {
             .setTitle('❌ Помилка!')
             .setDescription('Ви не можете використовувати цю команду.')
             .setColor('#4b73f5')
-            .setTimestamp()
 
         await interaction.reply({
             embeds: [embed],

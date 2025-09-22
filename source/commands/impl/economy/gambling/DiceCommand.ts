@@ -39,11 +39,11 @@ export class DiceCommand extends Command {
                 return await this.simpleReject(interaction, '🎲 Кубики', 'Число не може бути менше 1 та більше 6.')
             }
 
-            if (deposit < 50) {
+            if (deposit < 10) {
                 GamblingSystem.__PLAYERS__.delete(guildMember.id)
                 await interaction.deferReply({ephemeral: true})
 
-                return await this.simpleReject(interaction, '🎲 Кубики', 'Ставка не може бути менше ніж 50.')
+                return await this.simpleReject(interaction, '🎲 Кубики', 'Ставка не може бути менше ніж 10.')
             }
 
             const config = await Config.getConfig()
@@ -61,7 +61,20 @@ export class DiceCommand extends Command {
 
             // Отримуємо результат.
             const diceRoll = Math.floor(Math.random() * Object.keys(this.emojiNumbers).length) + 1
-            const result = (bet === diceRoll) ? deposit * 2.5 : 0
+            const userWon = (bet === diceRoll)
+            const multiplier = 2.5
+
+            const lostCoins = deposit
+            const winCoins = Math.floor(userWon ? (deposit * multiplier) : 0)
+
+            await Config.asyncUpdate(async (config) => {
+                const userEconomy = config.economy.users[guildMember.id]
+
+                userEconomy.balance -= lostCoins
+                userEconomy.balance += winCoins
+
+                return true
+            })
 
             // Анімуємо (Редагуємо один фрейм двічі, бо особисто мені не подобається здвиг повідомлення через тег "(змінено)").
             await this.editReply(interaction, this.animationFrames[0], deposit)
@@ -80,7 +93,7 @@ export class DiceCommand extends Command {
 
                 if (announceResults) {
                     // Це останній фрейм, тому відображаємо результати поверх останнього фрейму.
-                    const resultDiff = (bet === diceRoll) ? `-${deposit}\n+${result}` : `-${deposit}`
+                    const resultDiff = userWon ? `-${lostCoins}\n+${winCoins}` : `-${lostCoins}`
 
                     await this.editReply(
                         interaction,

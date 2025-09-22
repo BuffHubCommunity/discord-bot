@@ -125,6 +125,26 @@ import {REST, Routes, SlashCommandBuilder} from "discord.js";
                     .setMinValue(1)
                 )
             )
+            .addSubcommand((command) => command
+                .setName('рулетка')
+                .setDescription('Гра у рулетку.')
+                .addStringOption((option) => option
+                    .setName('колір')
+                    .setDescription('Колір секції, на який Ви робите ставку.')
+                    .setRequired(true)
+                    .addChoices(
+                        {name: '🟥 (x1.50)', value: 'red'},
+                        {name: '⬛ (x1.50)', value: 'black'},
+                        {name: '🟨 (x7.00)', value: 'gold'}
+                    )
+                )
+                .addNumberOption((option) => option
+                    .setName('ставка')
+                    .setDescription('Кількість монет для депозиту.')
+                    .setRequired(true)
+                    .setMinValue(1)
+                )
+            )
     ]
 
     const VerifyCommands = [

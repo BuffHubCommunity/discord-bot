@@ -25,6 +25,8 @@ import {CasinoCommand} from "./commands/impl/economy/gambling/CasinoCommand";
 import {PushTheCartCommand} from "./commands/impl/PushTheCartCommand";
 import {BalanceAdminCommand} from "./commands/impl/economy/BalanceAdminCommand";
 import {DiceCommand} from "./commands/impl/economy/gambling/DiceCommand";
+import {ClientOverride} from "./ClientOverride";
+import {NewbieWelcomeWorker} from "./background/impl/NewbieWelcomeWorker";
 
 (async () => {
     const client = new Client({
@@ -59,10 +61,12 @@ import {DiceCommand} from "./commands/impl/economy/gambling/DiceCommand";
         console.log('Бот запущений.')
     })
 
-    overrideDiscordEvents(client)
+    ClientOverride.overrideDiscordEvents(client)
+
+    await new NewbieWelcomeWorker().job(client)
 
     // Команди.
-    client.on('interactionCreateSafe', async (interaction: Interaction<CacheType>) => {
+    ClientOverride.on(client, 'interactionCreateSafe', async (interaction: Interaction<CacheType>) => {
         if (!interaction.guild) return
         if (!(interaction instanceof ChatInputCommandInteraction)) return
 
@@ -109,44 +113,6 @@ async function verifyUserIntegrity(userId: string) {
             }
         })
     }
-}
-
-function overrideDiscordEvents(client: Client) {
-    client.on('messageCreate', async (message) => {
-        await Config.ensureUserExists(message.author.id)
-
-        client.emit('messageCreateSafe', message)
-    })
-
-    client.on('messageDelete', async (message) => {
-        if (message.partial) {
-            // Відсутня більшість інформації про повідомлення.
-        } else {
-            await Config.ensureUserExists(message.author.id)
-        }
-
-        client.emit('messageDeleteSafe', message)
-    })
-
-    client.on('guildMemberUpdate', async (oldMember, newMember) => {
-        await Config.ensureUserExists(newMember.id)
-
-        client.emit('guildMemberUpdateSafe', oldMember, newMember)
-    })
-
-    client.on('voiceStateUpdate', async (oldState, newState) => {
-        await Config.ensureUserExists(newState.id)
-
-        client.emit('voiceStateUpdateSafe', oldState, newState)
-    })
-
-    client.on('interactionCreate', async (interaction: Interaction<CacheType>) => {
-        if (!interaction.member) return
-
-        await Config.ensureUserExists(interaction.member.user.id)
-
-        client.emit('interactionCreateSafe', interaction)
-    })
 }
 
 function millisToTime(millis: number): string {

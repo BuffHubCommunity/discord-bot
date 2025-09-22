@@ -1,6 +1,7 @@
 import {Command} from '../Command'
-import {Channel, ChatInputCommandInteraction, Client, EmbedBuilder, GuildMember, TextChannel} from 'discord.js'
+import {Channel, ChatInputCommandInteraction, Client, EmbedBuilder, GuildMember, Message, TextChannel} from 'discord.js'
 import {Config} from '../../Config'
+import {ClientOverride} from "../../ClientOverride";
 
 export type GreetMember = {
     role_id: string,
@@ -12,7 +13,7 @@ export class GreetVerifiedUserCommand extends Command {
     readonly name = 'налаштувати-привітання'
 
     async init(client: Client): Promise<void> {
-        client.on('guildMemberUpdateSafe', async (oldMember: GuildMember, newMember: GuildMember) => {
+        ClientOverride.on(client, 'guildMemberUpdateSafe', async (oldMember: GuildMember, newMember: GuildMember) => {
             const config = await Config.getConfig()
 
             const greetMember = config.commands.greetMember

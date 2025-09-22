@@ -294,7 +294,6 @@ export class VerifySteamProfileCommand extends Command {
                             .addFields(Fields)
                             .setColor(this.DEFAULT_COLOR)
                             .setFooter(SichFooter)
-                            .setTimestamp()
                     ]
                 })
             }
@@ -306,7 +305,6 @@ export class VerifySteamProfileCommand extends Command {
             .setTitle('❌ Помилка!')
             .setDescription('Ви не можете використовувати цю команду.')
             .setColor(this.DEFAULT_COLOR)
-            .setTimestamp()
 
         await interaction.reply({
             embeds: [embed],

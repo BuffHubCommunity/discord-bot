@@ -10,6 +10,7 @@ import {
 } from 'discord.js'
 import {Config} from "../../../Config";
 import {Main} from "../../../Main";
+import {ClientOverride} from "../../../ClientOverride";
 
 export type UserEconomy = {
     balance: number,
@@ -71,7 +72,7 @@ export class EconomyCommand extends Command {
         const voiceMembers: { [key: string]: VoiceMemberSchema } = {}
         const rewardingVoiceMembers: { [key: string]: RewardingVoiceMemberSchema } = {}
 
-        client.on('messageDeleteSafe', async (message: Message) => {
+        ClientOverride.on(client, 'messageDeleteSafe', async (message: Message) => {
             if (message.partial) return
 
             const username = (message.author.globalName || message.author.username)
@@ -86,7 +87,7 @@ export class EconomyCommand extends Command {
             })
         })
 
-        client.on('messageCreateSafe', async (message: Message) => {
+        ClientOverride.on(client, 'messageCreateSafe', async (message: Message) => {
             if (message.author?.bot) return
             if (message.content?.length < 10) return
             if (message.channel.type !== ChannelType.GuildText) return
@@ -129,7 +130,7 @@ export class EconomyCommand extends Command {
             }
         }
 
-        client.on('voiceStateUpdateSafe', async (oldState: VoiceState, newState: VoiceState) => {
+        ClientOverride.on(client, 'voiceStateUpdateSafe', async (oldState: VoiceState, newState: VoiceState) => {
             const oldChannel = oldState.channel
             const newChannel = newState.channel
 

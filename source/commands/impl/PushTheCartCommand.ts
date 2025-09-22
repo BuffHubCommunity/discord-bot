@@ -2,6 +2,7 @@ import {Command} from "../Command"
 import {ChannelType, ChatInputCommandInteraction, Client, Message} from 'discord.js'
 import {Main} from "../../Main"
 import {Config} from "../../Config";
+import {ClientOverride} from "../../ClientOverride";
 
 export type PushTheCartScheme = {
     current_distance: number
@@ -23,7 +24,7 @@ export class PushTheCartCommand extends Command {
             })
         })
 
-        client.on('messageCreateSafe', async (message: Message) => {
+        ClientOverride.on(client, 'messageCreateSafe', async (message: Message) => {
             if (!message.content) return
             if (message.author?.bot) return
             if (message.channel.type !== ChannelType.GuildText) return
